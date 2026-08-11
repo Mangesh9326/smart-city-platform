@@ -1,5 +1,5 @@
 const eventBus = require('./EventBus');
-const { broadcastDecisionPlan } = require('./socketManager');
+const { broadcastDecisionPlan, broadcastDepartmentUpdate, broadcastIncidentTrigger } = require('./socketManager');
 
 // Import Domain Agents
 const TrafficAgent = require('../agents/TrafficAgent');
@@ -35,16 +35,26 @@ class AgentCoordinator {
     }
 
     async processCityEvent(eventPayload) {
-        console.log(`[COORDINATOR] Ingesting Event: ${eventPayload.type} at ${eventPayload.location} (Severity: ${eventPayload.severity})`);
+        console.log(`[COORDINATOR] Ingesting Dynamic Event: ${eventPayload.type} at ${eventPayload.location} (Severity: ${eventPayload.severity})`);
         
+        // 1. Trigger the Live Incident Feed on the frontend immediately
+        if (eventPayload.severity === 'Critical' || eventPayload.severity === 'High') {
+            broadcastIncidentTrigger({
+                id: eventPayload.id,
+                type: eventPayload.type,
+                message: `${eventPayload.type} Detected`,
+                location: eventPayload.location
+            });
+        }
+
         // Reset the message log for this specific evaluation cycle
         this.messageLog = [];
 
-        // 1. Parallel Evaluation: All agents evaluate the event independently simultaneously
+        // 2. Parallel Evaluation: All agents evaluate the dynamic event independently simultaneously
         const agentPromises = this.agents.map(agent => agent.evaluate(eventPayload));
         const results = await Promise.all(agentPromises);
 
-        // 2. Filter out agents that determined the event was outside their domain (returned null)
+        // 3. Filter out agents that determined the event was outside their domain (returned null)
         const activeDecisions = results.filter(decision => decision !== null);
 
         if (activeDecisions.length === 0) {
@@ -52,18 +62,35 @@ class AgentCoordinator {
             return null;
         }
 
-        // 3. Decision Fusion: Command Center merges the independent decisions and inter-agent messages
-        const finalCoordinatedPlan = this.commandCenter.fuseDecisions(
-            eventPayload, 
-            activeDecisions, 
-            this.messageLog
-        );
+        // 4. Dynamic Dashboard Push: Broadcast each active agent's isolated state to its respective UI card
+        activeDecisions.forEach(decision => {
+            if (decision.department) {
+                broadcastDepartmentUpdate({
+                    department: decision.department,    // e.g., 'traffic', 'hospital'
+                    status: decision.status,            // e.g., 'Blocked', 'Deploying'
+                    severity: decision.severity,        // e.g., 'Critical', 'High'
+                    metadata: decision.metadata         // Dynamic KPIs (e.g., congestion %, available beds)
+                });
+            }
+        });
 
-        // 4. Broadcast Output: Push the structured JSON to the React Frontend via Socket.IO
-        broadcastDecisionPlan(finalCoordinatedPlan);
-        console.log(`[COORDINATOR] Unified Plan Broadcasted. Priority: ${finalCoordinatedPlan.priority}`);
+        // 5. Decision Fusion: Command Center merges the independent decisions and inter-agent messages
+        // We delay the final fusion slightly (e.g., 2 seconds) to simulate AI processing time and 
+        // allow the UI to stagger the department updates before the final plan drops.
+        setTimeout(() => {
+            const finalCoordinatedPlan = this.commandCenter.fuseDecisions(
+                eventPayload, 
+                activeDecisions, 
+                this.messageLog
+            );
 
-        return finalCoordinatedPlan;
+            // 6. Broadcast Output: Push the structured JSON to the React Decision Commander via Socket.IO
+            broadcastDecisionPlan(finalCoordinatedPlan);
+            console.log(`[COORDINATOR] Unified Plan Broadcasted. Priority: ${finalCoordinatedPlan.priority}`);
+            
+        }, 2000); 
+
+        return true;
     }
 }
 

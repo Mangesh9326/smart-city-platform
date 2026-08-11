@@ -46,7 +46,7 @@ export default function MainLayout() {
         </main>
 
         {/* GLOBAL RIGHT PANEL (Level 3 - Context) */}
-        <aside className="w-72 flex-shrink-0 glass-panel rounded-none border-y-0 border-r-0 flex flex-col">
+        {/* <aside className="w-72 flex-shrink-0 glass-panel rounded-none border-y-0 border-r-0 flex flex-col">
            <div className="p-4 border-b border-city-700/50 font-bold text-sm text-gray-300 uppercase">Live Operations</div>
            <div className="p-4 flex flex-col gap-4 overflow-y-auto">
               <div className="bg-red-500/10 border border-red-500/30 p-3 rounded text-sm text-red-400">
@@ -56,7 +56,7 @@ export default function MainLayout() {
                 🤖 AI Action: Diverting Traffic
               </div>
            </div>
-        </aside>
+        </aside> */}
 
       </div>
     </div>

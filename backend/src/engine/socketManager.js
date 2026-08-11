@@ -12,9 +12,6 @@ const initializeSocket = (server) => {
 
     io.on('connection', (socket) => {
         console.log(`[SOCKET] Client connected: ${socket.id}`);
-        
-        // The client can join specific rooms if they only want department data,
-        // but the Unified Dashboard will listen to the global broadcast.
         socket.join('unified_dashboard');
 
         socket.on('disconnect', () => {
@@ -25,28 +22,32 @@ const initializeSocket = (server) => {
     console.log('[SYSTEM] Socket.IO Initialized for Real-Time Synchronization.');
 };
 
-// Functions to broadcast to specific frontend panels
-const broadcastTrafficUpdate = (data) => {
-    if (io) io.to('unified_dashboard').emit('TRAFFIC_UPDATE', data);
+// --- DYNAMIC BROADCAST FUNCTIONS ---
+
+// Broadcasts isolated agent responses to update the 6 department cards dynamically
+const broadcastDepartmentUpdate = (updateData) => {
+    if (io) io.to('unified_dashboard').emit('DEPARTMENT_UPDATE', updateData);
 };
 
-const broadcastHospitalUpdate = (data) => {
-    if (io) io.to('unified_dashboard').emit('HOSPITAL_UPDATE', data);
-};
-
+// Broadcasts the fused action plan to the Decision Commander panel
 const broadcastDecisionPlan = (plan) => {
     if (io) io.to('unified_dashboard').emit('DECISION_COMMAND', plan);
 };
 
-// Global tick broadcast for the Digital Twin / Map
+// Broadcasts the live incident to the right sidebar video feed
+const broadcastIncidentTrigger = (incidentData) => {
+    if (io) io.to('unified_dashboard').emit('INCIDENT_TRIGGERED', incidentData);
+};
+
+// Global tick broadcast for the Digital Twin Map interpolation
 const broadcastSystemTick = (timestamp, activeEvents, vehicles) => {
     if (io) io.to('unified_dashboard').emit('SYSTEM_TICK', { timestamp, activeEvents, vehicles });
 };
 
 module.exports = {
     initializeSocket,
-    broadcastTrafficUpdate,
-    broadcastHospitalUpdate,
+    broadcastDepartmentUpdate,
     broadcastDecisionPlan,
+    broadcastIncidentTrigger,
     broadcastSystemTick
 };

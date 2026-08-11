@@ -5,6 +5,7 @@ import {
   TileLayer,
   Marker,
   Popup,
+  useMap,
 } from "react-leaflet";
 import MarkerClusterGroup from "react-leaflet-cluster";
 import { useMapStore } from "../../store/useMapStore";
@@ -54,7 +55,34 @@ const createCustomClusterIcon = (cluster) => {
     });
 };
 
-const DigitalTwinMap = () => {
+// Helper component to center and zoom map dynamically when demoLocation changes
+const MapViewController = ({ center, zoom }) => {
+  const map = useMap();
+  useEffect(() => {
+    if (center) {
+      map.flyTo(center, zoom, { duration: 1.5 });
+    }
+  }, [center, zoom, map]);
+  return null;
+};
+
+// Page-specific glowing demo camera marker icon
+const demoCameraIcon = L.divIcon({
+  className: 'custom-demo-marker',
+  html: `
+    <div style="position: relative; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center;">
+      <div style="position: absolute; width: 48px; height: 48px; background: rgba(59, 130, 246, 0.45); border-radius: 50%; animation: ping 1.5s cubic-bezier(0, 0, 0.2, 1) infinite;"></div>
+      <div style="width: 32px; height: 32px; background: #3b82f6; border: 2px solid #ffffff; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 0 15px rgba(59, 130, 246, 0.9); z-index: 10;">
+        <svg style="width: 16px; height: 16px; fill: white;" viewBox="0 0 24 24"><path d="M15 8v8H5V8h10m1-2H4c-.55 0-1 .45-1 1v10c0 .55.45 1 1 1h12c.55 0 1-.45 1-1v-3.5l4 4v-11l-4 4V7c0-.55-.45-1-1-1z"/></svg>
+      </div>
+    </div>
+  `,
+  iconSize: [36, 36],
+  iconAnchor: [18, 18],
+  popupAnchor: [0, -20]
+});
+
+const DigitalTwinMap = ({ demoLocation }) => {
   // 2. Destructure activeLayers and toggleLayer from your Zustand store
   const { 
     getFilteredEntities, 
@@ -66,13 +94,17 @@ const DigitalTwinMap = () => {
   } = useMapStore();
   
   const visibleEntities = getFilteredEntities();
-  const [showControls, setShowControls] = useState(true);
+  const [showControls, setShowControls] = useState(false);
 
   useEffect(() => {
     fetch("/api/map/data")
       .then((res) => res.json())
       .then((data) => initializeMap(data));
   }, []);
+
+  const defaultCenter = [19.076, 72.8777];
+  const currentCenter = demoLocation ? [demoLocation.lat, demoLocation.lng] : defaultCenter;
+  const currentZoom = demoLocation ? 17 : 12;
 
   return (
     <div className="relative w-full h-full bg-slate-950 overflow-hidden">
@@ -128,15 +160,40 @@ const DigitalTwinMap = () => {
       </div>
 
       <MapContainer
-        center={[19.076, 72.8777]}
+        center={defaultCenter}
         zoom={12}
         className="absolute inset-0 z-0"
         zoomControl={false}
       >
+        <MapViewController center={currentCenter} zoom={currentZoom} />
+
         <TileLayer
           attribution="&copy; OpenStreetMap contributors"
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
+
+        {/* Optional Page-Specific Demonstration Marker */}
+        {demoLocation && (
+          <Marker position={[demoLocation.lat, demoLocation.lng]} icon={demoCameraIcon}>
+            <Popup className="enterprise-popup border-t-4 border-blue-500">
+              <div className="w-64 bg-slate-900 text-slate-100 p-3 rounded-lg shadow-xl font-sans">
+                <h3 className="font-bold text-md border-b border-slate-700 pb-1 text-blue-400 flex items-center gap-2">
+                  <span className="w-2 h-2 rounded-full bg-blue-500 animate-pulse"></span> Demonstration Camera
+                </h3>
+                <div className="mt-2 space-y-1 text-xs font-mono">
+                  <div><span className="text-slate-400">Camera ID:</span> <span className="text-white font-bold">{demoLocation.id}</span></div>
+                  <div><span className="text-slate-400">Location:</span> <span className="text-white">{demoLocation.name}</span></div>
+                  <div><span className="text-slate-400">Latitude:</span> <span className="text-slate-300">{demoLocation.lat}</span></div>
+                  <div><span className="text-slate-400">Longitude:</span> <span className="text-slate-300">{demoLocation.lng}</span></div>
+                  <div className="pt-2 border-t border-slate-800 flex justify-between items-center">
+                    <span className="text-slate-400">Status:</span>
+                    <span className="bg-emerald-500/20 text-emerald-400 px-2 py-0.5 rounded border border-emerald-500/30 text-[10px] font-bold">Ready</span>
+                  </div>
+                </div>
+              </div>
+            </Popup>
+          </Marker>
+        )}
 
         {/* Layer 1: Static Clustered Entities (Hospitals, Police, Sensors) */}
         <MarkerClusterGroup chunkedLoading maxClusterRadius={30} iconCreateFunction={createCustomClusterIcon} disableClusteringAtZoom={8}>

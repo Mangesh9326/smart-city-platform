@@ -21,6 +21,7 @@ initializeSocket(server);
 
 // Routes
 app.use('/api/auth', authRoutes);
+// app.use('/api/simulations', simulationRoutes);
 app.use('/api/simulation', simulationRoutes);
 app.use('/api/map', mapRoutes);
 
