@@ -1,5 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import DigitalTwinMap from '../../components/DigitalTwin/MapWidget';
+import { useMapStore } from '../../store/useMapStore';
 
 // =========================================================================
 // ICONS (inline, dependency-free)
@@ -43,12 +45,6 @@ const IconPin = ({ className }) => (
     <circle cx="12" cy="11" r="2.5" strokeLinecap="round" strokeLinejoin="round" />
   </svg>
 );
-const IconClock = ({ className }) => (
-  <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-    <circle cx="12" cy="12" r="9" />
-    <path strokeLinecap="round" strokeLinejoin="round" d="M12 7v5l3 3" />
-  </svg>
-);
 const IconUsers = ({ className }) => (
   <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
     <path strokeLinecap="round" strokeLinejoin="round" d="M17 20h5v-2a4 4 0 00-3-3.87M9 20H4v-2a4 4 0 013-3.87m5-2.13a4 4 0 100-8 4 4 0 000 8zm7 1a4 4 0 10-2.516-7.14" />
@@ -71,11 +67,11 @@ const IconTarget = ({ className }) => (
 );
 
 // =========================================================================
-// STATIC STYLE MAPS (kept as literal class strings so Tailwind's JIT scanner
-// picks them up — never build class names dynamically at runtime)
+// STATIC STYLE MAPS
 // =========================================================================
 
 const COLOR_STYLES = {
+  indigo: { border: 'border-t-indigo-500/70', text: 'text-indigo-400', bg: 'bg-indigo-500/10', ring: 'border-indigo-500/30', bar: 'bg-indigo-500', glow: 'shadow-[0_0_15px_rgba(99,102,241,0.15)]' },
   red: { border: 'border-t-red-500/70', text: 'text-red-400', bg: 'bg-red-500/10', ring: 'border-red-500/30', bar: 'bg-red-500', glow: 'shadow-[0_0_15px_rgba(239,68,68,0.15)]' },
   emerald: { border: 'border-t-emerald-500/70', text: 'text-emerald-400', bg: 'bg-emerald-500/10', ring: 'border-emerald-500/30', bar: 'bg-emerald-500', glow: 'shadow-[0_0_15px_rgba(16,185,129,0.15)]' },
   blue: { border: 'border-t-blue-500/70', text: 'text-blue-400', bg: 'bg-blue-500/10', ring: 'border-blue-500/30', bar: 'bg-blue-500', glow: 'shadow-[0_0_15px_rgba(59,130,246,0.15)]' },
@@ -91,77 +87,6 @@ const SEVERITY_STYLES = {
   Low: { text: 'text-emerald-400', bg: 'bg-emerald-500/10', border: 'border-emerald-500/30', dot: 'bg-emerald-500' },
 };
 
-// =========================================================================
-// MOCK INCIDENT DATA (swap for Zustand store data)
-// =========================================================================
-
-const INCIDENTS = [
-  {
-    id: 'INC-2291',
-    title: 'MG Road Collision',
-    type: 'Traffic Accident',
-    severity: 'Critical',
-    status: 'Response Active',
-    reportedAt: '2 min ago',
-    address: 'MG Road Junction, Sector 14',
-    coords: '19.0760° N, 72.8777° E',
-    distance: '1.2 km from HQ',
-    unitsAssigned: 7,
-    camera: 'CAM-04 · MG Road Junction',
-    aiTag: 'Vehicle collision detected',
-    aiConfidence: 97,
-    congestion: 42,
-  },
-  {
-    id: 'INC-2288',
-    title: 'Warehouse Fire Alert',
-    type: 'Fire Hazard',
-    severity: 'High',
-    status: 'Units Dispatched',
-    reportedAt: '8 min ago',
-    address: 'Industrial Area, Block C',
-    coords: '19.0820° N, 72.8910° E',
-    distance: '3.6 km from HQ',
-    unitsAssigned: 4,
-    camera: 'CAM-11 · Block C Perimeter',
-    aiTag: 'Smoke plume detected',
-    aiConfidence: 89,
-    congestion: 18,
-  },
-  {
-    id: 'INC-2281',
-    title: 'Power Grid Fluctuation',
-    type: 'Utility Fault',
-    severity: 'Medium',
-    status: 'Monitoring',
-    reportedAt: '15 min ago',
-    address: 'Sector 21 Substation',
-    coords: '19.0655° N, 72.8695° E',
-    distance: '5.1 km from HQ',
-    unitsAssigned: 1,
-    camera: 'CAM-07 · Substation Gate',
-    aiTag: 'Voltage anomaly flagged',
-    aiConfidence: 74,
-    congestion: 6,
-  },
-  {
-    id: 'INC-2275',
-    title: 'Waterlogging Report',
-    type: 'Public Works',
-    severity: 'Low',
-    status: 'Advisory Issued',
-    reportedAt: '22 min ago',
-    address: 'Station Road Underpass',
-    coords: '19.0704° N, 72.8811° E',
-    distance: '2.4 km from HQ',
-    unitsAssigned: 0,
-    camera: 'CAM-02 · Station Underpass',
-    aiTag: 'Standing water detected',
-    aiConfidence: 81,
-    congestion: 11,
-  },
-];
-
 const DEPARTMENTS = [
   { id: 'traffic', name: 'Traffic Dept', status: 'Alert', color: 'red', icon: IconCar, load: 78 },
   { id: 'hospital', name: 'Hospital Dept', status: 'Deploying', color: 'emerald', icon: IconPlus, load: 45 },
@@ -172,7 +97,119 @@ const DEPARTMENTS = [
 ];
 
 // =========================================================================
-// DEPARTMENT PANEL CONTENT (unchanged data, restyled shell around them)
+// DATA NORMALIZATION
+// =========================================================================
+
+const normalizeIncident = (inc) => {
+  let payload = {};
+  
+  try {
+    const dataString = inc.timeline_events || inc.description;
+    if (dataString) {
+      payload = typeof dataString === 'string' ? JSON.parse(dataString) : dataString;
+    }
+  } catch (e) {
+    payload = { description: inc.timeline_events || inc.description }; 
+  }
+
+  const lat = parseFloat(inc.latitude);
+  const lng = parseFloat(inc.longitude);
+
+  let videoUrl = null;
+  if (payload.videoUrl) {
+    videoUrl = payload.videoUrl;
+  } else if (payload.video_file) {
+    videoUrl = `http://localhost:5000/videos/${payload.video_file}`;
+  } else if (inc.scenario_id) {
+    videoUrl = `http://localhost:5000/videos/${inc.scenario_id}.mp4`;
+  }
+
+  let conf = 'N/A';
+  if (payload.confidence) {
+    conf = payload.confidence <= 1 ? Math.round(payload.confidence * 100) : payload.confidence;
+  }
+
+  const severity = payload.severity || inc.severity || 'High';
+  const type = inc.incident_type || 'System Event';
+  const typeLower = type.toLowerCase();
+  const descLower = (payload.description || '').toLowerCase();
+
+  const agents = [{ name: 'Decision Coordinator', color: 'indigo' }];
+  
+  if (typeLower.includes('traffic') || typeLower.includes('collision') || descLower.includes('vehicle') || descLower.includes('car')) {
+    agents.push({ name: 'Traffic Agent', color: 'red' });
+  }
+  
+  if (typeLower.includes('robbery') || typeLower.includes('police') || typeLower.includes('pursuit') || typeLower.includes('violence') || severity === 'Critical') {
+    agents.push({ name: 'Police Agent', color: 'blue' });
+  }
+  
+  if (severity === 'Critical' || severity === 'High' || typeLower.includes('fire') || typeLower.includes('accident')) {
+    agents.push({ name: 'Hospital Agent', color: 'emerald' });
+    if (typeLower.includes('fire') || typeLower.includes('explosion') || descLower.includes('smoke')) {
+        agents.push({ name: 'Fire Agent', color: 'orange' });
+    }
+  }
+  
+  if (typeLower.includes('weather') || typeLower.includes('public') || severity === 'Critical') {
+    agents.push({ name: 'Citizen Agent', color: 'teal' });
+  }
+  
+  if (typeLower.includes('utility') || typeLower.includes('power')) {
+    agents.push({ name: 'Utility Agent', color: 'purple' });
+  }
+
+  const actionPlan = [];
+  const units = payload.unitsAssigned || (severity === 'Critical' ? 5 : 2);
+  
+  actionPlan.push(`Dispatch ${units !== 'N/A' ? units : 'Available'} Responders (Unified Multi-Agent Sync)`);
+  
+  if (agents.some(a => a.name === 'Police Agent')) {
+    const coordsStr = !isNaN(lat) && !isNaN(lng) ? `${lat.toFixed(4)}° N, ${lng.toFixed(4)}° E` : 'target perimeter';
+    actionPlan.push(`Isolate Incident Perimeter at ${coordsStr} (Police Agent)`);
+  }
+  
+  if (agents.some(a => a.name === 'Traffic Agent')) {
+    actionPlan.push(`Initiate Dynamic Traffic Diversion Protocol (Traffic Agent)`);
+    if (severity === 'Critical') {
+        actionPlan.push(`Activate Emergency Green Corridor (Traffic Agent)`);
+    }
+  }
+  
+  if (agents.some(a => a.name === 'Fire Agent')) {
+    actionPlan.push(`Deploy Specialized Fire Suppression Units (Fire Agent)`);
+  }
+  
+  if (agents.some(a => a.name === 'Citizen Agent')) {
+    actionPlan.push(`Broadcast Area-Wide Mobile Safety Alerts (Citizen Agent)`);
+  }
+
+  return {
+    id: String(inc.incident_id),
+    title: type.replace(/_/g, ' '),
+    type: type,
+    severity: severity,
+    status: inc.status || 'Active',
+    reportedAt: inc.created_at ? new Date(inc.created_at).toLocaleTimeString() : 'Live Feed',
+    address: payload.location || payload.address || 'Camera / Sensor Node',
+    coords: !isNaN(lat) && !isNaN(lng) ? `${lat.toFixed(4)}° N, ${lng.toFixed(4)}° E` : 'N/A',
+    lat: !isNaN(lat) ? lat : null,
+    lng: !isNaN(lng) ? lng : null,
+    distance: payload.distance || 'N/A',
+    unitsAssigned: units,
+    camera: payload.camera || 'Live CCTV Edge Node',
+    aiTag: payload.description || payload.aiTag || 'AI Vision Trigger',
+    confidence: conf,
+    congestion: payload.congestion || 'N/A',
+    videoUrl: videoUrl,
+    source: inc.upload_id ? 'Live' : 'Scenario',
+    activeAgents: agents,
+    actionPlan: actionPlan
+  };
+};
+
+// =========================================================================
+// DEPARTMENT PANEL CONTENT
 // =========================================================================
 
 const TrafficPanel = () => (
@@ -244,11 +281,11 @@ const CitizenPanel = () => (
   <div className="p-3 text-sm flex flex-col gap-2">
     <div className="flex justify-between text-gray-300">
       <span className="text-gray-500">Environment:</span>
-      <span className="text-xs">Heavy Rain (120mm)</span>
+      <span className="text-xs">Normal</span>
     </div>
     <div className="flex justify-between text-gray-300">
       <span className="text-gray-500">Broadcast Issued:</span>
-      <span className="text-xs text-red-400">"Avoid MG Road"</span>
+      <span className="text-xs text-red-400">"Emergency Active"</span>
     </div>
   </div>
 );
@@ -263,7 +300,7 @@ const DEPT_PANEL_MAP = {
 };
 
 // =========================================================================
-// DEPARTMENT CARD (generic shell: icon, live status, resource load bar)
+// UI COMPONENTS
 // =========================================================================
 
 const DepartmentCard = ({ dept }) => {
@@ -292,17 +329,13 @@ const DepartmentCard = ({ dept }) => {
   );
 };
 
-// =========================================================================
-// ACTIVE INCIDENTS SIDEBAR LIST
-// =========================================================================
-
 const IncidentListCard = ({ incident, isSelected, onSelect }) => {
-  const s = SEVERITY_STYLES[incident.severity];
+  const s = SEVERITY_STYLES[incident.severity] || SEVERITY_STYLES['Medium'];
   return (
     <button
       onClick={() => onSelect(incident.id)}
       className={`w-full text-left p-3 rounded-lg border transition-all duration-150 flex flex-col gap-1.5
-        ${isSelected ? `${s.bg} ${s.border} shadow-[0_0_12px_rgba(0,0,0,0.25)]` : 'bg-black/20 border-city-700/40 hover:border-city-600 hover:bg-city-800/50'}`}
+        ${isSelected ? `${s.bg} ${s.border} shadow-[0_0_12px_rgba(0,0,0,0.25)] scale-[1.02]` : 'bg-black/20 border-city-700/40 hover:border-city-600 hover:bg-city-800/50'}`}
     >
       <div className="flex items-center justify-between">
         <span className="flex items-center gap-1.5">
@@ -324,7 +357,7 @@ const IncidentListCard = ({ incident, isSelected, onSelect }) => {
 };
 
 const IncidentsSidebar = ({ incidents, selectedId, onSelect, tall = false }) => {
-  const criticalCount = incidents.filter((i) => i.severity === 'Critical').length;
+  const criticalCount = incidents.filter((i) => i.severity === 'Critical' || i.severity === 'High').length;
   return (
     <div className={`glass-panel flex flex-col border-city-700/80 shadow-lg overflow-hidden ${tall ? 'h-full' : 'h-[360px]'}`}>
       <div className="border-b border-city-700/50 p-3.5 bg-city-800/30 rounded-t-xl flex flex-col gap-1.5 shrink-0">
@@ -336,12 +369,12 @@ const IncidentsSidebar = ({ incidents, selectedId, onSelect, tall = false }) => 
           {incidents.length} LIVE · {criticalCount} CRIT
         </span>
       </div>
-      <div className="flex-grow overflow-y-auto p-2.5 flex flex-col gap-2">
+      <div className="flex-grow overflow-y-auto p-2.5 flex flex-col gap-2 custom-scrollbar">
         {incidents.map((incident) => (
           <IncidentListCard
             key={incident.id}
             incident={incident}
-            isSelected={incident.id === selectedId}
+            isSelected={String(incident.id) === String(selectedId)}
             onSelect={onSelect}
           />
         ))}
@@ -349,10 +382,6 @@ const IncidentsSidebar = ({ incidents, selectedId, onSelect, tall = false }) => 
     </div>
   );
 };
-
-// =========================================================================
-// INCIDENT DETAILS + LOCATION PANEL
-// =========================================================================
 
 const DetailRow = ({ label, value, valueClass = 'text-gray-200' }) => (
   <div className="flex items-center justify-between py-1.5 border-b border-city-700/30 last:border-0">
@@ -362,26 +391,41 @@ const DetailRow = ({ label, value, valueClass = 'text-gray-200' }) => (
 );
 
 const IncidentDetailsPanel = ({ incident }) => {
-  const s = SEVERITY_STYLES[incident.severity];
+  const s = SEVERITY_STYLES[incident.severity] || SEVERITY_STYLES['Medium'];
+
+  const handleResolve = async () => {
+    try {
+        await fetch(`http://localhost:5000/api/incidents/${incident.id}/resolve`, { method: 'PUT' });
+        alert("Incident archived in the database. MapStore will refresh shortly.");
+    } catch(e) {
+        console.error("Failed to resolve", e);
+    }
+  };
+
   return (
     <div className="glass-panel border-city-700/80 shadow-lg overflow-hidden shrink-0">
       <div className="border-b border-city-700/50 p-3.5 bg-city-800/30 flex items-center justify-between">
         <span className="text-xs font-bold text-gray-300 uppercase tracking-widest">Incident Details &amp; Location</span>
-        <span className={`text-[9px] px-2 py-1 rounded border font-bold uppercase tracking-widest ${s.bg} ${s.border} ${s.text}`}>
-          {incident.severity}
-        </span>
+        <div className="flex items-center gap-2">
+            <button onClick={handleResolve} className="text-[9px] font-bold bg-city-700 hover:bg-red-500/80 text-gray-300 hover:text-white px-2 py-1 rounded border border-city-600 transition-colors cursor-pointer">MARK RESOLVED</button>
+            <span className={`text-[9px] px-2 py-1 rounded border font-bold uppercase tracking-widest ${s.bg} ${s.border} ${s.text}`}>
+            {incident.severity}
+            </span>
+        </div>
       </div>
       <div className="grid grid-cols-2 gap-0 divide-x divide-city-700/40">
-        {/* Left: incident facts */}
         <div className="p-4 flex flex-col gap-1">
           <div className="text-lg font-bold text-gray-100 mb-1">{incident.title}</div>
           <div className="text-[11px] text-gray-500 font-mono mb-2">{incident.id} · {incident.type}</div>
           <DetailRow label="Status" value={incident.status} valueClass={s.text} />
           <DetailRow label="Reported" value={incident.reportedAt} />
           <DetailRow label="Units Assigned" value={incident.unitsAssigned} valueClass="text-blue-400" />
-          <DetailRow label="Congestion Impact" value={`${incident.congestion}%`} valueClass="text-yellow-400" />
+          <DetailRow 
+            label="Congestion Impact" 
+            value={incident.congestion !== 'N/A' ? `${incident.congestion}%` : 'N/A'} 
+            valueClass={incident.congestion !== 'N/A' ? "text-yellow-400" : "text-gray-500"} 
+          />
         </div>
-        {/* Right: location */}
         <div className="p-4 flex flex-col gap-2 relative overflow-hidden">
           <div className="absolute inset-0 bg-[linear-gradient(to_right,#1e293b_1px,transparent_1px),linear-gradient(to_bottom,#1e293b_1px,transparent_1px)] bg-[size:22px_22px] opacity-20 pointer-events-none"></div>
           <div className="relative z-10 flex items-center gap-2 text-gray-300 text-sm font-semibold">
@@ -408,16 +452,14 @@ const IncidentDetailsPanel = ({ incident }) => {
   );
 };
 
-// =========================================================================
-// FOOTAGE PANEL (live camera feed + AI detection overlay)
-// =========================================================================
-
 const FootagePanel = ({ incident }) => {
   const [now, setNow] = useState(new Date());
+  
   useEffect(() => {
     const t = setInterval(() => setNow(new Date()), 1000);
     return () => clearInterval(t);
   }, []);
+  
   const timestamp = now.toLocaleTimeString('en-IN', { hour12: false });
 
   return (
@@ -432,20 +474,27 @@ const FootagePanel = ({ incident }) => {
         </span>
       </div>
 
-      {/*
-        Wire an actual clip here when available, e.g.
-        {incident.footageUrl
-          ? <video src={incident.footageUrl} controls className="w-full h-full object-cover" />
-          : <MockFeed ... />}
-        Until a real source is provided, this renders a live-feed style
-        mock so the detection overlay still tells the story in a demo.
-      */}
-      <div className="relative h-64 bg-black overflow-hidden">
-        <div className="absolute inset-0 bg-[linear-gradient(to_right,#1e293b_1px,transparent_1px),linear-gradient(to_bottom,#1e293b_1px,transparent_1px)] bg-[size:32px_32px] opacity-20"></div>
-        <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-transparent to-black/70"></div>
+      <div className="relative h-64 bg-black overflow-hidden flex items-center justify-center">
+        <div className="absolute inset-0 bg-[linear-gradient(to_right,#1e293b_1px,transparent_1px),linear-gradient(to_bottom,#1e293b_1px,transparent_1px)] bg-[size:32px_32px] opacity-20 z-0 pointer-events-none"></div>
+        
+        {incident.videoUrl ? (
+          <video 
+            key={incident.id} 
+            src={incident.videoUrl} 
+            controls 
+            autoPlay 
+            muted 
+            loop 
+            className="absolute inset-0 w-full h-full object-contain z-10" 
+          />
+        ) : (
+          <div className="z-10 flex flex-col items-center gap-2 text-gray-600">
+            <IconVideo className="w-8 h-8 opacity-50" />
+            <span className="text-xs font-mono uppercase tracking-widest">Video Feed N/A</span>
+          </div>
+        )}
 
-        {/* Top overlay bar */}
-        <div className="absolute top-0 inset-x-0 flex items-center justify-between p-3 z-10">
+        <div className="absolute top-0 inset-x-0 flex items-center justify-between p-3 z-20 pointer-events-none">
           <span className="flex items-center gap-1.5 text-[10px] font-mono text-gray-300 bg-black/60 px-2 py-1 rounded border border-city-700/60">
             <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse"></span>
             REC
@@ -457,17 +506,15 @@ const FootagePanel = ({ incident }) => {
           </span>
         </div>
 
-        {/* Detection bounding box */}
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-10">
-          <div className="relative border-2 border-dashed border-emerald-400/80 rounded-md w-40 h-24 flex items-start justify-start">
-            <span className="absolute -top-6 left-0 text-[10px] font-mono bg-emerald-500/90 text-black px-1.5 py-0.5 rounded whitespace-nowrap">
-              {incident.aiTag} · {incident.aiConfidence}%
+        {incident.videoUrl && incident.aiTag && incident.aiTag !== 'N/A' && (
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-20 pointer-events-none">
+            <span className="text-[10px] font-mono bg-emerald-500/90 text-black px-1.5 py-0.5 rounded whitespace-nowrap shadow-lg">
+              {incident.aiTag} {incident.confidence !== 'N/A' && `· ${incident.confidence}%`}
             </span>
           </div>
-        </div>
+        )}
 
-        {/* Bottom controls mock */}
-        <div className="absolute bottom-0 inset-x-0 p-3 flex items-center gap-3 z-10">
+        <div className="absolute bottom-0 inset-x-0 p-3 flex items-center gap-3 z-20 pointer-events-none">
           <svg className="w-6 h-6 text-gray-300" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z" /></svg>
           <div className="flex-1 h-1 bg-white/20 rounded-full overflow-hidden">
             <div className="h-full w-2/3 bg-blue-500 rounded-full"></div>
@@ -479,14 +526,12 @@ const FootagePanel = ({ incident }) => {
   );
 };
 
-// =========================================================================
-// DECISION INTELLIGENCE PANEL
-// =========================================================================
-
 const ConfidenceGauge = ({ value }) => {
   const radius = 26;
   const circumference = 2 * Math.PI * radius;
-  const offset = circumference - (value / 100) * circumference;
+  const numericValue = value === 'N/A' ? 0 : Number(value);
+  const offset = circumference - (numericValue / 100) * circumference;
+  
   return (
     <svg width="64" height="64" viewBox="0 0 64 64" className="shrink-0">
       <circle cx="32" cy="32" r={radius} stroke="#1e293b" strokeWidth="6" fill="none" />
@@ -503,16 +548,12 @@ const ConfidenceGauge = ({ value }) => {
           <stop offset="100%" stopColor="#22d3ee" />
         </linearGradient>
       </defs>
-      <text x="32" y="36" textAnchor="middle" fontSize="13" fill="#e2e8f0" fontWeight="700">{value}%</text>
+      <text x="32" y="36" textAnchor="middle" fontSize="13" fill="#e2e8f0" fontWeight="700">
+        {value === 'N/A' ? 'N/A' : `${value}%`}
+      </text>
     </svg>
   );
 };
-
-const AGENTS = [
-  { name: 'Traffic', color: 'red' }, { name: 'Hospital', color: 'emerald' },
-  { name: 'Police', color: 'blue' }, { name: 'Fire', color: 'orange' },
-  { name: 'Utility', color: 'purple' }, { name: 'Citizen', color: 'teal' },
-];
 
 const DecisionCommander = ({ incident }) => (
   <div className="p-4 flex flex-col gap-3 h-full">
@@ -521,13 +562,12 @@ const DecisionCommander = ({ incident }) => (
         <div className="w-2 h-2 rounded-full bg-red-500 animate-pulse"></div>
         <span className="text-xs text-red-400 font-bold uppercase tracking-widest">Global Priority: {incident.severity}</span>
       </div>
-      <ConfidenceGauge value={incident.aiConfidence} />
+      <ConfidenceGauge value={incident.confidence} />
     </div>
 
-    {/* Agent fleet status strip */}
     <div className="flex flex-wrap gap-1.5">
-      {AGENTS.map((a) => {
-        const s = COLOR_STYLES[a.color];
+      {incident.activeAgents && incident.activeAgents.map((a) => {
+        const s = COLOR_STYLES[a.color] || COLOR_STYLES['blue'];
         return (
           <span key={a.name} className={`text-[9px] font-bold px-2 py-1 rounded-full border flex items-center gap-1 ${s.bg} ${s.ring} ${s.text}`}>
             <span className={`w-1.5 h-1.5 rounded-full ${s.bar}`}></span>
@@ -537,31 +577,17 @@ const DecisionCommander = ({ incident }) => (
       })}
     </div>
 
-    <div className="bg-black/40 border border-city-700/50 rounded-lg p-4">
+    <div className="bg-black/40 border border-city-700/50 rounded-lg p-4 mt-2">
       <div className="text-sm font-bold text-gray-200 mb-1">Target: {incident.title}</div>
       <div className="text-xs text-gray-500 mb-4">Multi-Agent Unified Action Plan Executing:</div>
-
+      
       <ul className="space-y-3 text-sm text-gray-300">
-        <li className="flex items-start gap-2">
-          <span className="text-emerald-500 mt-0.5">✓</span>
-          <span>Dispatch 2 Ambulances <span className="text-[10px] text-gray-500 block">(Hospital Agent)</span></span>
-        </li>
-        <li className="flex items-start gap-2">
-          <span className="text-emerald-500 mt-0.5">✓</span>
-          <span>Close {incident.title.split(' ')[0]} Road Intersection <span className="text-[10px] text-gray-500 block">(Police Agent)</span></span>
-        </li>
-        <li className="flex items-start gap-2">
-          <span className="text-emerald-500 mt-0.5">✓</span>
-          <span>Initiate Traffic Diversion <span className="text-[10px] text-gray-500 block">(Traffic Agent)</span></span>
-        </li>
-        <li className="flex items-start gap-2">
-          <span className="text-emerald-500 mt-0.5">✓</span>
-          <span>Activate Green Corridor <span className="text-[10px] text-gray-500 block">(Traffic + Police)</span></span>
-        </li>
-        <li className="flex items-start gap-2">
-          <span className="text-teal-400 mt-0.5 animate-pulse">⟳</span>
-          <span>Issue Mobile Citizen Alert <span className="text-[10px] text-gray-500 block">(Citizen Agent)</span></span>
-        </li>
+        {incident.actionPlan && incident.actionPlan.map((action, idx) => (
+          <li key={idx} className="flex items-start gap-2">
+            <span className="text-emerald-500 mt-0.5">✓</span>
+            <span>{action}</span>
+          </li>
+        ))}
       </ul>
     </div>
   </div>
@@ -578,21 +604,9 @@ const LLMAssistant = ({ incident }) => (
       <div className="flex justify-start">
         <div className="bg-blue-900/20 border border-blue-500/30 text-blue-100 text-sm px-3 py-2 rounded-lg rounded-tl-none max-w-[95%] leading-relaxed">
           <span className="font-bold text-blue-400 text-xs block mb-1">Grok AI System:</span>
-          A {incident.type.toLowerCase()} was reported at {incident.address} ({incident.reportedAt}). Expected impact on surrounding traffic is {incident.congestion}%. {incident.unitsAssigned} units have been assigned and the response plan is currently executing across all relevant departments.
+          A <strong>{incident.type.toLowerCase()}</strong> was automatically detected at {incident.address} ({incident.coords}). Confidence level is {incident.confidence !== 'N/A' ? `${incident.confidence}%` : 'unknown'}. {incident.unitsAssigned !== 'N/A' ? `${incident.unitsAssigned} units have` : 'Units have'} been dispatched. The multi-agent unified response plan is currently active, coordinated among: {incident.activeAgents ? incident.activeAgents.map(a => a.name).join(', ') : 'City Responders'}.
         </div>
       </div>
-    </div>
-
-    <div className="mt-4 relative">
-      <input
-        type="text"
-        placeholder="Ask Grok for insights or report generation..."
-        className="w-full bg-black/50 border border-city-700/80 rounded-lg py-2.5 pl-3 pr-10 text-sm text-gray-300 outline-none focus:border-blue-500 transition-colors"
-        disabled
-      />
-      <button className="absolute right-2 top-2 text-blue-500 hover:text-blue-400">
-        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path></svg>
-      </button>
     </div>
   </div>
 );
@@ -602,24 +616,57 @@ const LLMAssistant = ({ incident }) => (
 // =========================================================================
 
 export default function UnifiedDashboard() {
-  const [selectedId, setSelectedId] = useState(INCIDENTS[0].id);
+  const location = useLocation();
+  const navigate = useNavigate();
   const [now, setNow] = useState(new Date());
+  
+  const { incidents: dbIncidents } = useMapStore();
 
+  const displayIncidents = useMemo(() => {
+    if (!dbIncidents || dbIncidents.length === 0) return [];
+
+    const sortedDb = [...dbIncidents].sort((a, b) => b.incident_id - a.incident_id);
+
+    return sortedDb.map(normalizeIncident);
+  }, [dbIncidents]);
+
+  // FIX: Filter out resolved/inactive incidents so they disappear from the active sidebar and map
+  const activeIncidents = useMemo(() => {
+    return displayIncidents.filter(inc => inc.status && inc.status.toLowerCase() !== 'resolved' && inc.status.toLowerCase() !== 'inactive');
+  }, [displayIncidents]);
+
+  const selectedId = new URLSearchParams(location.search).get('incidentId');
+
+  // FIX: Auto-Default Navigation to the Newest Incident if no URL param is present
+  useEffect(() => {
+    if (!selectedId && activeIncidents.length > 0) {
+      navigate(`/?incidentId=${activeIncidents[0].id}`, { replace: true });
+    }
+  }, [selectedId, activeIncidents, navigate]);
+
+  const handleSelectIncident = (id) => {
+    navigate(`/?incidentId=${id}`, { replace: true });
+  };
+
+  const selectedIncident = useMemo(
+    () => activeIncidents.find((i) => i.id === selectedId) || null,
+    [activeIncidents, selectedId]
+  );
+  
   useEffect(() => {
     const t = setInterval(() => setNow(new Date()), 1000);
     return () => clearInterval(t);
   }, []);
 
-  const selectedIncident = useMemo(
-    () => INCIDENTS.find((i) => i.id === selectedId) ?? INCIDENTS[0],
-    [selectedId]
-  );
-  const criticalCount = INCIDENTS.filter((i) => i.severity === 'Critical').length;
+  const criticalCount = activeIncidents.filter((i) => i.severity === 'Critical' || i.severity === 'High').length;
+
+  const focusedCenter = selectedIncident && selectedIncident.lat && selectedIncident.lng 
+    ? [selectedIncident.lat, selectedIncident.lng] 
+    : null;
 
   return (
     <div className="h-screen overflow-hidden bg-city-900 p-6 flex flex-col gap-6 text-gray-100 font-sans">
-
-      {/* Top Navigation & Global KPIs */}
+      
       <header className="glass-panel p-5 flex justify-between items-center shrink-0 shadow-lg">
         <div>
           <h1 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-teal-300">
@@ -627,7 +674,7 @@ export default function UnifiedDashboard() {
           </h1>
           <p className="text-xs text-gray-400 uppercase tracking-widest mt-1.5">
             <span className="text-emerald-400 font-bold mr-2">● LIVE</span>
-            {now.toLocaleTimeString('en-IN', { hour12: false })} | Scenario: Synthetic Demo (MG Road)
+            {now.toLocaleTimeString('en-IN', { hour12: false })} | Scenario: {selectedIncident ? `${selectedIncident.source} Edge Processing` : 'Standby'}
           </p>
         </div>
         <div className="flex space-x-4 text-sm font-medium">
@@ -636,72 +683,70 @@ export default function UnifiedDashboard() {
             {criticalCount} Critical Alert{criticalCount !== 1 ? 's' : ''}
           </div>
           <div className="bg-indigo-500/10 text-indigo-300 px-5 py-2.5 rounded-lg border border-indigo-500/30">
-            AI Confidence: {selectedIncident.aiConfidence}%
+            AI Confidence: {selectedIncident && selectedIncident.confidence !== 'N/A' ? `${selectedIncident.confidence}%` : 'N/A'}
           </div>
           <div className="bg-blue-500/10 text-blue-400 px-5 py-2.5 rounded-lg border border-blue-500/30">
-            Agents Active: 6
+            Agents Active: {selectedIncident?.activeAgents ? selectedIncident.activeAgents.length : 0}
           </div>
         </div>
       </header>
 
-      {/* Main Grid Layout */}
       <main className="grid grid-cols-12 gap-6 flex-1 min-h-0">
-
-        {/* Left Column (Spans 9 cols) */}
-        <section className="col-span-10 h-full min-h-0 overflow-y-auto pr-1 flex flex-col gap-6">
-
-          {/* Digital Twin Map */}
+        <section className="col-span-10 h-full min-h-0 overflow-y-auto pr-1 flex flex-col gap-6 custom-scrollbar">
+          
           <div className="glass-panel h-80 relative overflow-hidden flex flex-col border-city-700/80 shadow-lg shrink-0">
             <div className="absolute top-3 left-3 z-20 px-2 py-1 bg-black/80 rounded text-[10px] text-gray-300 font-mono border border-city-700 flex items-center gap-2 shadow-md">
-              <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
-              DIGITAL TWIN SYNC
+              <span className="w-2 h-2 rounded-full bg-emerald-500"></span> DIGITAL TWIN SYNC
             </div>
-            <DigitalTwinMap />
+            <DigitalTwinMap 
+                focusedCenter={focusedCenter} 
+                focusedZoom={selectedIncident ? 18 : null} 
+                selectedIncidentId={selectedIncident?.id || null} 
+            />
           </div>
 
-          {/* Incident Details & Location */}
-          <IncidentDetailsPanel incident={selectedIncident} />
+          {selectedIncident ? (
+            <>
+              <IncidentDetailsPanel incident={selectedIncident} />
+              <FootagePanel incident={selectedIncident} />
 
-          {/* Footage */}
-          <FootagePanel incident={selectedIncident} />
+              <div className="grid grid-cols-3 gap-4">
+                {DEPARTMENTS.map((dept) => (
+                  <DepartmentCard key={dept.id} dept={dept} />
+                ))}
+              </div>
 
-          {/* Department Data Grid */}
-          <div className="grid grid-cols-3 gap-4">
-            {DEPARTMENTS.map((dept) => (
-              <DepartmentCard key={dept.id} dept={dept} />
-            ))}
-          </div>
+              <div className="glass-panel flex flex-col border-indigo-500/30 shadow-[0_0_20px_rgba(99,102,241,0.08)] overflow-hidden h-[450px] shrink-0">
+                <div className="border-b border-indigo-500/20 p-3.5 text-xs font-bold text-indigo-300 uppercase tracking-widest bg-indigo-900/10 rounded-t-xl flex items-center justify-between shadow-sm">
+                  <span className="flex items-center gap-2"><IconBolt className="w-4 h-4" /> Decision Intelligence</span>
+                  <span className="text-[9px] bg-indigo-500/20 px-2 py-1 rounded text-indigo-200 border border-indigo-500/30">MULTI-AGENT FUSION</span>
+                </div>
+                <div className="flex-grow overflow-y-auto">
+                  <DecisionCommander incident={selectedIncident} />
+                </div>
+              </div>
 
-          {/* Decision Intelligence Panel */}
-          <div className="glass-panel flex flex-col border-indigo-500/30 shadow-[0_0_20px_rgba(99,102,241,0.08)] overflow-hidden h-[450px] shrink-0">
-            <div className="border-b border-indigo-500/20 p-3.5 text-xs font-bold text-indigo-300 uppercase tracking-widest bg-indigo-900/10 rounded-t-xl flex items-center justify-between shadow-sm">
-              <span className="flex items-center gap-2">
-                <IconBolt className="w-4 h-4" />
-                Decision Intelligence
-              </span>
-              <span className="text-[9px] bg-indigo-500/20 px-2 py-1 rounded text-indigo-200 border border-indigo-500/30">MULTI-AGENT FUSION</span>
+              <div className="glass-panel flex flex-col overflow-hidden h-[380px] shrink-0">
+                <div className="border-b border-city-700/50 p-3.5 text-xs font-bold text-gray-300 uppercase tracking-widest bg-city-800/30 rounded-t-xl flex items-center justify-between">
+                  <span>City Assistant</span>
+                  <span className="text-[9px] bg-blue-500/20 px-2 py-1 rounded text-blue-300 border border-blue-500/30">GROK NLP</span>
+                </div>
+                <div className="flex-grow overflow-y-auto">
+                  <LLMAssistant incident={selectedIncident} />
+                </div>
+              </div>
+            </>
+          ) : (
+            <div className="glass-panel p-10 flex flex-col items-center justify-center text-gray-500 h-[400px] shrink-0 border-city-700/50 shadow-lg">
+              <IconTarget className="w-16 h-16 mb-4 text-city-600" />
+              <h2 className="text-xl font-bold text-gray-400 uppercase tracking-widest">Incident Not Found</h2>
+              <p className="text-sm mt-2 max-w-md text-center">Please select an active incident from the sidebar to view details, live footage, and AI multi-agent decision intelligence.</p>
             </div>
-            <div className="flex-grow overflow-y-auto">
-              <DecisionCommander incident={selectedIncident} />
-            </div>
-          </div>
-
-          {/* LLM City Assistant Chat */}
-          <div className="glass-panel flex flex-col overflow-hidden h-[380px] shrink-0">
-            <div className="border-b border-city-700/50 p-3.5 text-xs font-bold text-gray-300 uppercase tracking-widest bg-city-800/30 rounded-t-xl flex items-center justify-between">
-              <span>City Assistant</span>
-              <span className="text-[9px] bg-blue-500/20 px-2 py-1 rounded text-blue-300 border border-blue-500/30">GROK NLP</span>
-            </div>
-            <div className="flex-grow overflow-y-auto">
-              <LLMAssistant incident={selectedIncident} />
-            </div>
-          </div>
-
+          )}
         </section>
 
-        {/* Right Column: Active Incidents only (Spans 3 cols) — slim, persistent sidebar */}
         <section className="col-span-2 h-full min-h-0 flex flex-col">
-          <IncidentsSidebar incidents={INCIDENTS} selectedId={selectedId} onSelect={setSelectedId} tall />
+          <IncidentsSidebar incidents={activeIncidents} selectedId={selectedId} onSelect={handleSelectIncident} tall />
         </section>
       </main>
     </div>

@@ -13,6 +13,7 @@ import { getEnterpriseIcon } from "./iconHelper";
 
 // 1. Interactive Legend & Layer Config
 const LAYER_INDICATORS = [
+  { id: 'incidents', label: 'Critical Incidents', color: 'bg-red-600' },
   { id: 'health', label: 'Hospitals / EMS', color: 'bg-red-500' },
   { id: 'police', label: 'Police Stations', color: 'bg-blue-600' },
   { id: 'traffic', label: 'Traffic & CCTVs', color: 'bg-amber-500' },
@@ -55,14 +56,47 @@ const createCustomClusterIcon = (cluster) => {
     });
 };
 
-// Helper component to center and zoom map dynamically when demoLocation changes
-const MapViewController = ({ center, zoom }) => {
+// Critical incident marker — Now accepts `isSelected` to differentiate the active target
+const createIncidentIcon = (severity, isSelected) => {
+  const isCritical = severity === 'Critical' || severity === 'High';
+  
+  // Make the selected marker distinctly larger
+  const ringSize = isSelected ? 68 : (isCritical ? 48 : 36);
+  const dotSize = isSelected ? 40 : (isCritical ? 30 : 22);
+  const glyphSize = isSelected ? 20 : (isCritical ? 16 : 12);
+
+  // Selected incident turns Blue to stand out from the other active Red incidents
+  const glowColor = isSelected ? 'rgba(59, 130, 246, 0.55)' : 'rgba(220, 38, 38, 0.45)';
+  const bgColor = isSelected ? '#2563eb' : '#dc2626';
+
+  return L.divIcon({
+    className: 'custom-incident-marker',
+    html: `
+      <div style="position: relative; width: ${ringSize}px; height: ${ringSize}px; display: flex; align-items: center; justify-content: center;">
+        <div style="position: absolute; width: ${ringSize}px; height: ${ringSize}px; background: ${glowColor}; border-radius: 50%; animation: ping 1.4s cubic-bezier(0, 0, 0.2, 1) infinite;"></div>
+        <div style="width: ${dotSize}px; height: ${dotSize}px; background: ${bgColor}; border: 2px solid #ffffff; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 0 16px ${glowColor}; z-index: ${isSelected ? 100 : 10};">
+          <svg style="width: ${glyphSize}px; height: ${glyphSize}px; fill: white;" viewBox="0 0 24 24"><path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"/></svg>
+        </div>
+      </div>
+    `,
+    iconSize: [ringSize, ringSize],
+    iconAnchor: [ringSize / 2, ringSize / 2],
+    popupAnchor: [0, -ringSize / 2],
+  });
+};
+
+// FIX: Track primitive coordinates AND selectedIncidentId to force map to fly on every click
+const MapViewController = ({ center, zoom, selectedIncidentId }) => {
   const map = useMap();
+  const lat = center ? center[0] : null;
+  const lng = center ? center[1] : null;
+
   useEffect(() => {
-    if (center) {
-      map.flyTo(center, zoom, { duration: 1.5 });
+    if (lat !== null && lng !== null) {
+      map.flyTo([lat, lng], zoom, { duration: 1.5 });
     }
-  }, [center, zoom, map]);
+  }, [lat, lng, zoom, selectedIncidentId, map]);
+
   return null;
 };
 
@@ -82,8 +116,8 @@ const demoCameraIcon = L.divIcon({
   popupAnchor: [0, -20]
 });
 
-const DigitalTwinMap = ({ demoLocation }) => {
-  // 2. Destructure activeLayers and toggleLayer from your Zustand store
+// Phase 2/3: Added focusedCenter, focusedZoom, and selectedIncidentId props
+const DigitalTwinMap = ({ demoLocation, focusedCenter, focusedZoom, selectedIncidentId }) => {
   const { 
     getFilteredEntities, 
     vehicles, 
@@ -100,16 +134,18 @@ const DigitalTwinMap = ({ demoLocation }) => {
     fetch("/api/map/data")
       .then((res) => res.json())
       .then((data) => initializeMap(data));
-  }, []);
+  }, [initializeMap]);
 
   const defaultCenter = [19.076, 72.8777];
-  const currentCenter = demoLocation ? [demoLocation.lat, demoLocation.lng] : defaultCenter;
-  const currentZoom = demoLocation ? 17 : 12;
+  
+  // Prioritize explicitly focused center/zoom from Dashboard, fallback to demoLocation, then default
+  const currentCenter = focusedCenter || (demoLocation ? [demoLocation.lat, demoLocation.lng] : defaultCenter);
+  const currentZoom = focusedZoom || (demoLocation ? 17 : 12);
 
   return (
     <div className="relative w-full h-full bg-slate-950 overflow-hidden">
       
-      {/* 3. Floating Layer Buttons & Icon Indicator Panel (z-[1000] keeps it above Leaflet) */}
+      {/* Floating Layer Buttons & Icon Indicator Panel */}
       <div className="absolute top-4 right-4 z-[1000] flex flex-col items-end gap-2">
         <button 
           onClick={() => setShowControls(!showControls)}
@@ -136,7 +172,7 @@ const DigitalTwinMap = ({ demoLocation }) => {
                   >
                     <div className="flex items-center gap-3">
                       {/* Icon Color Indicator */}
-                      <span className={`w-3 h-3 rounded-full ${layer.color} shadow-[0_0_8px_currentColor]`}></span>
+                      <span className={`w-3 h-3 rounded-full ${layer.color} shadow-[0_0_8px_currentColor] ${layer.id === 'incidents' ? 'animate-pulse' : ''}`}></span>
                       <span className="text-sm font-medium">{layer.label}</span>
                     </div>
                     
@@ -148,13 +184,6 @@ const DigitalTwinMap = ({ demoLocation }) => {
                 );
               })}
             </div>
-            
-            <div className="mt-4 pt-3 border-t border-slate-700">
-                <div className="flex items-center gap-3 p-1">
-                    <span className="w-3 h-3 rounded-full bg-red-600 animate-pulse shadow-[0_0_8px_#dc2626]"></span>
-                    <span className="text-sm text-slate-400">Critical Incidents (Pulse)</span>
-                </div>
-            </div>
           </div>
         )}
       </div>
@@ -165,7 +194,7 @@ const DigitalTwinMap = ({ demoLocation }) => {
         className="absolute inset-0 z-0"
         zoomControl={false}
       >
-        <MapViewController center={currentCenter} zoom={currentZoom} />
+        <MapViewController center={currentCenter} zoom={currentZoom} selectedIncidentId={selectedIncidentId} />
 
         <TileLayer
           attribution="&copy; OpenStreetMap contributors"
@@ -217,7 +246,7 @@ const DigitalTwinMap = ({ demoLocation }) => {
           ))}
         </MarkerClusterGroup>
 
-        {/* Layer 2: Real-time Moving Vehicles (Unclustered for smooth delta animation) */}
+        {/* Layer 2: Real-time Moving Vehicles */}
         {vehicles.map((v) => (
           <Marker
             key={v.vehicle_id}
@@ -240,22 +269,29 @@ const DigitalTwinMap = ({ demoLocation }) => {
           </Marker>
         ))}
 
-        {/* Layer 3: Active Incidents (Highest Z-Index, Red Pulse CSS) */}
-        {incidents.map((inc) => (
-          <Marker
-            key={inc.incident_id}
-            position={[parseFloat(inc.latitude), parseFloat(inc.longitude)]}
-            icon={getEnterpriseIcon("incident")}
-          >
-            <Popup className="enterprise-popup border-t-4 border-red-500">
-              <EnterprisePopup
-                title={inc.incident_type}
-                type="Critical Alert"
-                metadata={{ severity: inc.severity, status: inc.status }}
-              />
-            </Popup>
-          </Marker>
-        ))}
+        {/* Layer 3: Active Incidents (Highest Z-Index, Pulses) */}
+        {/* FIX: Renders ALL active incidents, bringing the selected target to the front with a blue glow */}
+        {activeLayers['incidents'] !== false && incidents
+          .filter(inc => inc.status && inc.status.toLowerCase() !== 'resolved' && inc.status.toLowerCase() !== 'inactive')
+          .map((inc) => {
+            const isSelected = String(inc.incident_id) === String(selectedIncidentId);
+            return (
+              <Marker
+                key={inc.incident_id}
+                position={[parseFloat(inc.latitude), parseFloat(inc.longitude)]}
+                icon={createIncidentIcon(inc.severity, isSelected)}
+                zIndexOffset={isSelected ? 1000 : 0}
+              >
+                <Popup className={`enterprise-popup border-t-4 ${isSelected ? 'border-blue-500' : 'border-red-500'}`}>
+                  <EnterprisePopup
+                    title={inc.incident_type}
+                    type="Critical Alert"
+                    metadata={{ severity: inc.severity, status: inc.status }}
+                  />
+                </Popup>
+              </Marker>
+            );
+          })}
       </MapContainer>
     </div>
   );

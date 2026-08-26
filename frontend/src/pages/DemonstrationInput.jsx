@@ -5,7 +5,7 @@ import DigitalTwinMap from '../components/DigitalTwin/MapWidget';
 export default function DemonstrationInput() {
   const navigate = useNavigate();
 
-  // Task 4 & 5: Real Mumbai locations with smooth flyTo & automatic popup/highlight
+  // Task 4 & 5: Real Mumbai locations
   const mumbaiLocations = [
     { id: 'CAM-101', name: 'Ruia College Road', road: 'Matunga West', lat: 19.023845829174906, lng: 72.8496884047973 },
     { id: 'CAM-102', name: 'Dadar Railway Station', road: 'Dr. Ambedkar Rd', lat: 19.0180, lng: 72.8436 },
@@ -25,13 +25,16 @@ export default function DemonstrationInput() {
   const [logs, setLogs] = useState([]);
   const [isComplete, setIsComplete] = useState(false);
 
+  // Phase 1: State to hold the actual database Incident ID returned from the backend
+  const [generatedIncidentId, setGeneratedIncidentId] = useState(null);
+
   // Multi-Agent activation state
   const [activeAgents, setActiveAgents] = useState([]);
   const [detectionSummary, setDetectionSummary] = useState(null);
   const [replaySummary, setReplaySummary] = useState(null);
 
   const logContainerRef = useRef(null);
-  const videoRef = useRef(null); // Ref to control the video player
+  const videoRef = useRef(null); 
 
   // Enterprise Processing Pipeline Stages
   const processingStages = [
@@ -47,12 +50,26 @@ export default function DemonstrationInput() {
     'Completed'
   ];
 
-  // Task 1: Fetch dynamic scenarios from PostgreSQL and append "Live"
-  // FIXED: Added /simulation to the path
+  // Comprehensive Debugging hook to print state changes to the console
   useEffect(() => {
+    console.group("[DEBUG CONSOLE] DemonstrationInput State Snapshot");
+    console.log("Selected Camera:", selectedCamera);
+    console.log("Selected Scenario ID:", selectedScenarioId);
+    console.log("Scenario Details:", scenarioDetails);
+    console.log("Custom File Selected:", customFile ? customFile.name : "None");
+    console.log("Processing Status:", { isProcessing, progress, currentStageIndex, isComplete });
+    console.log("Active Multi-Agents:", activeAgents);
+    console.log("Detection Summary Metrics:", detectionSummary);
+    console.log("Generated Incident ID (Phase 1):", generatedIncidentId);
+    console.groupEnd();
+  }, [selectedCamera, selectedScenarioId, scenarioDetails, customFile, isProcessing, progress, isComplete, activeAgents, detectionSummary, generatedIncidentId]);
+
+  useEffect(() => {
+    console.log("[DEBUG] DemonstrationInput: Fetching scenarios...");
     fetch('http://localhost:5000/api/simulation/scenario')
       .then(res => res.json())
       .then(data => {
+        console.log("[DEBUG] DemonstrationInput: Scenarios fetched successfully:", data);
         const formatted = Array.isArray(data) ? data : [];
         formatted.push({ id: 'live', name: 'Live (Real-Time YOLOv8 Inference)', description: 'Stream custom CCTV and execute live edge inference.' });
         setScenarios(formatted);
@@ -73,17 +90,21 @@ export default function DemonstrationInput() {
       });
   }, []);
 
-  // Task 2 & 3: Fetch dynamic scenario metadata when selection changes
-  // FIXED: Added /simulation to the path
   useEffect(() => {
     if (!selectedScenarioId || selectedScenarioId === 'live') {
       setScenarioDetails(null);
       return;
     }
 
+    setCustomFile(null);
+
+    console.log(`[DEBUG] DemonstrationInput: Fetching scenario details for ID: ${selectedScenarioId}`);
     fetch(`http://localhost:5000/api/simulation/scenario/${selectedScenarioId}`)
       .then(res => res.json())
-      .then(data => setScenarioDetails(data))
+      .then(data => {
+        console.log("[DEBUG] DemonstrationInput: Scenario details fetched:", data);
+        setScenarioDetails(data);
+      })
       .catch(err => {
         console.warn('[WARNING] Could not fetch scenario metadata, using structured fallback.');
         setScenarioDetails({
@@ -94,7 +115,7 @@ export default function DemonstrationInput() {
       });
   }, [selectedScenarioId]);
 
-  // Video Auto-Play logic: When details or custom file changes, reload the video
+  // Video Auto-Play logic
   useEffect(() => {
     if (videoRef.current) {
       videoRef.current.load();
@@ -109,7 +130,6 @@ export default function DemonstrationInput() {
     }
   }, [scenarioDetails, customFile, selectedScenarioId]);
 
-  // Task 13: Optimized log appending with automatic scroll cleanup
   useEffect(() => {
     if (logContainerRef.current) {
       logContainerRef.current.scrollTop = logContainerRef.current.scrollHeight;
@@ -117,6 +137,7 @@ export default function DemonstrationInput() {
   }, [logs]);
 
   const handleCameraSelect = (cam) => {
+    console.log("[DEBUG] Camera selected:", cam);
     setSelectedCamera(cam);
   };
 
@@ -128,6 +149,7 @@ export default function DemonstrationInput() {
       return;
     }
 
+    console.log("[DEBUG] DemonstrationInput: Starting Pipeline Execution...");
     setIsProcessing(true);
     setIsComplete(false);
     setCurrentStageIndex(0);
@@ -136,6 +158,7 @@ export default function DemonstrationInput() {
     setActiveAgents([]);
     setDetectionSummary(null);
     setReplaySummary(null);
+    setGeneratedIncidentId(null); // Phase 1: Reset ID on new run
 
     if (selectedScenarioId === 'live') {
       executeLivePipeline();
@@ -144,21 +167,27 @@ export default function DemonstrationInput() {
     }
   };
 
-  // FIXED: Added /simulation to the path
   const executeLivePipeline = async () => {
     const formData = new FormData();
     if (customFile) formData.append('video', customFile);
     formData.append('cameraId', selectedCamera.id);
     formData.append('location', selectedCamera.name);
+    formData.append('lat', selectedCamera.lat);
+    formData.append('lng', selectedCamera.lng);
 
     try {
+      console.log("[DEBUG] DemonstrationInput: Uploading Custom Video payload...", {
+        file: customFile?.name,
+        camera: selectedCamera.id
+      });
       const res = await fetch('http://localhost:5000/api/simulation/live/upload', {
         method: 'POST',
         body: formData
       });
       const data = await res.json();
+      console.log("[DEBUG] DemonstrationInput: Upload Response received:", data);
+      
       const uploadId = data.uploadId;
-
       pollLiveProcessing(uploadId);
     } catch (err) {
       console.error('[LIVE PIPELINE ERROR]', err);
@@ -167,47 +196,63 @@ export default function DemonstrationInput() {
     }
   };
 
-  // FIXED: Added /simulation to the path
   const pollLiveProcessing = (uploadId) => {
     let stage = 0;
     const interval = setInterval(async () => {
       stage++;
       setCurrentStageIndex(Math.min(stage, processingStages.length - 1));
-      setProgress((stage / (processingStages.length - 1)) * 100);
-
+      
       try {
         const res = await fetch(`http://localhost:5000/api/simulation/live/${uploadId}/log`);
         const data = await res.json();
+        console.log(`[DEBUG] DemonstrationInput: Polling Status (Upload ID: ${uploadId}) ->`, data);
+
         if (data.logs) {
           setLogs(data.logs);
         }
 
-        if (stage >= processingStages.length - 1 || data.status === 'Completed') {
+        // Dynamically track progress, ensuring 100% on completion
+        if (data.status === 'Completed' || stage >= processingStages.length - 1) {
           clearInterval(interval);
-          finalizeSuccessfulProcessing({
-            cars: 18, persons: 27, motorcycles: 8, bus: 3, truck: 2, emergency: 4,
-            confidence: '98.4%', trackingIDs: 58, timelineEvents: 12, duration: '01:45'
-          });
+          setProgress(100);
+          setCurrentStageIndex(processingStages.length - 1);
+
+          // Phase 1: Extract actual incident ID from backend response
+          const actualIncidentId = data.incidentId || data.summary?.incidentId;
+          if (actualIncidentId) {
+             console.log("[DEBUG] Phase 1 Sync: Live Incident ID Captured ->", actualIncidentId);
+             setGeneratedIncidentId(actualIncidentId);
+          }
+
+          console.log("[DEBUG] DemonstrationInput: Pipeline completed successfully. Summary:", data.summary);
+          finalizeSuccessfulProcessing(data.summary || {});
+        } else {
+          // Progress visually if real progress isnt returned
+          setProgress(data.progress || (stage / (processingStages.length - 1)) * 100);
         }
       } catch (e) {
+        console.error("[DEBUG] DemonstrationInput: Polling execution error:", e);
         clearInterval(interval);
         setIsProcessing(false);
       }
     }, 1200);
   };
 
-  // FIXED: Added /simulation to the path
   const executeReplayPipeline = async () => {
     try {
-      const res = await fetch(`http://localhost:5000/api/simulation/scenario/${selectedScenarioId}/log`);
+      console.log(`[DEBUG] DemonstrationInput: Executing Simulated Replay for Scenario ID: ${selectedScenarioId}`);
+      const res = await fetch(`http://localhost:5000/api/simulation/scenario/${selectedScenarioId}/log?location=${encodeURIComponent(selectedCamera.name)}`);
       const data = await res.json();
-      const rawLogs = Array.isArray(data) ? data : [
+      console.log("[DEBUG] DemonstrationInput: Replay Logs Fetched:", data);
+
+      // Support for updated backend structure which wraps logs in data.logs
+      const rawLogs = Array.isArray(data.logs) ? data.logs : (Array.isArray(data) ? data : [
         "Loading replay scenario...",
         "Loading AI metadata...",
         "Frame 1: Vehicle detected (Confidence 99%)",
         "Frame 42: Anomaly signature isolated",
         "Timeline synchronized successfully"
-      ];
+      ]);
 
       let stage = 0;
       const timer = setInterval(() => {
@@ -221,55 +266,142 @@ export default function DemonstrationInput() {
 
         if (stage >= processingStages.length) {
           clearInterval(timer);
-          finalizeSuccessfulProcessing({
-            cars: 14, persons: 19, motorcycles: 5, bus: 2, truck: 1, emergency: 3,
-            confidence: '97.2%', trackingIDs: 34, timelineEvents: scenarioDetails?.timeline_events_count || 6, duration: scenarioDetails?.duration || '02:00'
-          });
+          setProgress(100); // Enforce 100% processing bar completion
+          
+          // Use realistic simulated stats based on scenario meta details
+          const simEvents = scenarioDetails?.timeline_events_count || 6;
+          const simTracking = scenarioDetails?.detection_count || 42;
+          
+          const stats = {
+            cars: Math.floor(simTracking * 0.5), 
+            persons: Math.floor(simTracking * 0.3), 
+            motorcycles: Math.floor(simTracking * 0.1), 
+            bus: 2, 
+            truck: 1, 
+            emergency: simEvents > 0 ? 1 : 0,
+            confidence: '97.2%', 
+            trackingIDs: simTracking, 
+            timelineEvents: simEvents, 
+            duration: scenarioDetails?.duration || '02:00'
+          };
+
+          // Phase 1: Extract actual incident ID from backend payload for scenarios
+          const actualIncidentId = data.incidentId || scenarioDetails?.incident_id;
+          if (actualIncidentId) {
+             console.log("[DEBUG] Phase 1 Sync: Scenario Incident ID Captured ->", actualIncidentId);
+             setGeneratedIncidentId(actualIncidentId);
+          }
+
+          console.log("[DEBUG] DemonstrationInput: Replay finished with simulated stats:", stats);
+          finalizeSuccessfulProcessing(stats);
         }
       }, 700);
 
     } catch (err) {
-      console.error('[REPLAY ERROR]', err);
+      console.error('[DEBUG] DemonstrationInput: REPLAY ERROR', err);
       setIsProcessing(false);
     }
   };
 
   const finalizeSuccessfulProcessing = (summaryStats) => {
+    console.log("[DEBUG] DemonstrationInput: Finalizing processing. Analyzing Summary Stats:", summaryStats);
+    
     setIsProcessing(false);
     setIsComplete(true);
+    setProgress(100);
+
+    // Structure the detected objects formatting to handle both Live DB Arrays and Simulation Objects
+    let formattedObjects = { cars: 0, persons: 0, bus: 0, truck: 0, emergency: 0, motorcycles: 0 };
+    let trackingIDs = 0;
+    let timelineEvents = 0;
+
+    if (summaryStats && Array.isArray(summaryStats.objects)) {
+      // Logic for Live DB fetch: Map backend grouping array
+      summaryStats.objects.forEach(obj => {
+        const name = obj.object_detected ? obj.object_detected.toLowerCase() : '';
+        if (name === 'car') formattedObjects.cars = parseInt(obj.count, 10);
+        else if (name === 'person') formattedObjects.persons = parseInt(obj.count, 10);
+        else if (name === 'bus') formattedObjects.bus = parseInt(obj.count, 10);
+        else if (name === 'truck') formattedObjects.truck = parseInt(obj.count, 10);
+        else if (name === 'motorcycle') formattedObjects.motorcycles = parseInt(obj.count, 10);
+      });
+      trackingIDs = summaryStats.trackingIDs || 0;
+      timelineEvents = summaryStats.timelineEvents || 0;
+    } else if (summaryStats) {
+       // Logic for Replay Engine Objects
+       formattedObjects = {
+           cars: summaryStats.cars || 14,
+           persons: summaryStats.persons || 19,
+           bus: summaryStats.bus || 2,
+           truck: summaryStats.truck || 1,
+           emergency: summaryStats.emergency || 3,
+           motorcycles: summaryStats.motorcycles || 5,
+       };
+       trackingIDs = summaryStats.trackingIDs || 34;
+       timelineEvents = summaryStats.timelineEvents || 6;
+    }
 
     setDetectionSummary({
-      objects: summaryStats,
-      confidence: summaryStats.confidence,
-      trackingIDs: summaryStats.trackingIDs,
-      timelineEvents: summaryStats.timelineEvents,
-      duration: summaryStats.duration
+      objects: formattedObjects,
+      confidence: summaryStats?.confidence || '94.2%',
+      trackingIDs: trackingIDs,
+      timelineEvents: timelineEvents,
+      duration: summaryStats?.duration || '02:00'
     });
 
     setReplaySummary({
       replayId: `REP-${Math.floor(Math.random() * 89999 + 10000)}`,
       scenario: scenarioDetails?.name || 'Active Live Stream',
       frames: 3600,
-      objectsDetected: summaryStats.trackingIDs,
-      eventsCount: summaryStats.timelineEvents,
-      duration: summaryStats.duration,
+      objectsDetected: trackingIDs,
+      eventsCount: timelineEvents,
+      duration: summaryStats?.duration || '02:00',
       status: 'Ready for Dispatch',
       cached: true
     });
 
-    const agentsToActivate = [
-      'Traffic Agent', 'Police Agent', 'Hospital Agent', 'Fire Agent',
-      'Citizen Agent', 'Utility Agent', 'Weather Agent', 'Decision Coordinator'
-    ];
+    // Intelligent Agent Activation based on actual AI timeline contexts
+    determineAndActivateAgents(timelineEvents, formattedObjects);
+  };
 
-    agentsToActivate.forEach((agent, index) => {
+  const determineAndActivateAgents = (eventCount, objects) => {
+    // 1. Core Coordinator is always required to assess the data
+    const agentsToWake = ['Decision Coordinator']; 
+    
+    // 2. Traffic & Transport Dispatch
+    if (objects.cars > 0 || objects.bus > 0 || objects.truck > 0 || objects.motorcycles > 0) {
+        agentsToWake.push('Traffic Agent');
+    }
+    
+    // 3. Law Enforcement Dispatch
+    if (eventCount > 0) {
+        agentsToWake.push('Police Agent');
+    }
+    
+    // 4. Critical Emergency Responders
+    if (eventCount >= 2 || objects.emergency > 0) {
+        agentsToWake.push('Hospital Agent');
+        agentsToWake.push('Fire Agent');
+    }
+    
+    // 5. Public / Civilian Notifications
+    if (eventCount >= 4 || objects.persons > 30) {
+        agentsToWake.push('Citizen Agent');
+    }
+
+    console.log("[DEBUG] DemonstrationInput: Deploying specific Multi-Agents based on Context:", agentsToWake);
+    
+    // 6. Trigger UI animations sequentially
+    agentsToWake.forEach((agent, index) => {
       setTimeout(() => {
-        setActiveAgents(prev => [...prev, agent]);
+        setActiveAgents(prev => {
+          if (!prev.includes(agent)) return [...prev, agent];
+          return prev;
+        });
       }, (index + 1) * 350);
     });
   };
 
-  // Helper to determine the video source URL
   const getVideoSource = () => {
     if (selectedScenarioId === 'live') {
       return customFile ? URL.createObjectURL(customFile) : null;
@@ -312,6 +444,14 @@ export default function DemonstrationInput() {
            </div>
            
            <div className="relative w-full h-52 bg-gray-950 rounded-lg overflow-hidden border border-city-700 shadow-inner">
+             {/* demoLocation is intentionally always set here (from selectedCamera).
+                 MapWidget derives `isDashboard = !demoLocation` internally, so
+                 passing demoLocation suppresses the live/critical incident layer
+                 on this map. This panel is for picking a camera location only —
+                 it must never surface live incidents. The real-time incident
+                 layer (with the pulsing critical icon) only renders on the
+                 main Digital Twin dashboard route, where DigitalTwinMap is
+                 mounted without a demoLocation prop. */}
              <DigitalTwinMap demoLocation={selectedCamera} />
            </div>
 
@@ -491,19 +631,19 @@ export default function DemonstrationInput() {
             <div className="grid grid-cols-4 gap-2 text-center font-mono">
               <div className="bg-black/40 p-2 rounded border border-city-700">
                 <div className="text-[9px] text-gray-500 uppercase">Cars</div>
-                <div className="text-sm font-bold text-blue-300">{detectionSummary.objects.cars}</div>
+                <div className="text-sm font-bold text-blue-300">{detectionSummary.objects.cars || 0}</div>
               </div>
               <div className="bg-black/40 p-2 rounded border border-city-700">
                 <div className="text-[9px] text-gray-500 uppercase">Persons</div>
-                <div className="text-sm font-bold text-teal-300">{detectionSummary.objects.persons}</div>
+                <div className="text-sm font-bold text-teal-300">{detectionSummary.objects.persons || 0}</div>
               </div>
               <div className="bg-black/40 p-2 rounded border border-city-700">
                 <div className="text-[9px] text-gray-500 uppercase">Buses/Trucks</div>
-                <div className="text-sm font-bold text-amber-300">{detectionSummary.objects.bus + detectionSummary.objects.truck}</div>
+                <div className="text-sm font-bold text-amber-300">{(detectionSummary.objects.bus || 0) + (detectionSummary.objects.truck || 0)}</div>
               </div>
               <div className="bg-black/40 p-2 rounded border border-city-700">
                 <div className="text-[9px] text-gray-500 uppercase">Emergency</div>
-                <div className="text-sm font-bold text-red-400">{detectionSummary.objects.emergency}</div>
+                <div className="text-sm font-bold text-red-400">{detectionSummary.objects.emergency || 0}</div>
               </div>
             </div>
           </div>
@@ -563,8 +703,15 @@ export default function DemonstrationInput() {
               </div>
             </div>
 
+            {/* Phase 1: Conditional navigation utilizing the dynamically generated Incident ID */}
             <button 
-              onClick={() => navigate('/')}
+              onClick={() => {
+                if (generatedIncidentId) {
+                  navigate(`/?incidentId=${generatedIncidentId}`);
+                } else {
+                  navigate('/');
+                }
+              }}
               className="w-full bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold py-3 rounded-lg text-xs uppercase tracking-widest shadow-[0_0_20px_rgba(16,185,129,0.4)] transition-all cursor-pointer flex items-center justify-center gap-2"
             >
               <span>Launch Synchronized Smart City Dashboard</span>
