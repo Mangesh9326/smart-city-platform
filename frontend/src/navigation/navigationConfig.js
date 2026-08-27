@@ -1,73 +1,83 @@
-// src/navigation/sidebarConfig.js
-
 export const mainSidebar = [
   {
     title: "Dashboard",
-    path: "/"
+    path: "/",
+    icon: "dashboard",
   },
-  { title: "Simulation Launchpad", path: "/launchpad" },
+  {
+    title: "Simulation Launchpad",
+    path: "/launchpad",
+    icon: "launchpad",
+  },
   {
     title: "Digital Twin",
-    path: "/digital-twin"
+    path: "/digital-twin",
+    icon: "digital-twin",
   },
   {
     title: "Traffic Department",
-    path: "/traffic"
+    path: "/traffic",
+    icon: "traffic",
   },
   {
     title: "Hospital Department",
-    path: "/hospital"
+    path: "/hospital",
+    icon: "hospital",
   },
   {
     title: "Police Department",
-    path: "/police"
+    path: "/police",
+    icon: "police",
   },
   {
     title: "Fire Department",
-    path: "/fire"
+    path: "/fire",
+    icon: "fire",
   },
   {
     title: "Utility Department",
-    path: "/utility"
+    path: "/utility",
+    icon: "utility",
   },
   {
     title: "Citizen Services",
-    path: "/citizen"
+    path: "/citizen",
+    icon: "citizen",
   },
   {
     title: "City Reports",
-    path: "/reports"
+    path: "/reports",
+    icon: "reports",
   },
   {
     title: "AI Analytics",
-    path: "/analytics"
+    path: "/analytics",
+    icon: "analytics",
   },
   {
     title: "System Settings",
-    path: "/settings"
-  }
+    path: "/settings",
+    icon: "settings",
+  },
 ];
+
 
 export const departmentSidebars = {
 
   //------------------------------------------------
   // TRAFFIC
   //------------------------------------------------
-  traffic: [
+traffic: [
     { title: "Overview", path: "/traffic" },
-    { title: "Live Traffic", path: "/traffic/live" },
-    { title: "Traffic Signals", path: "/traffic/signals" },
-    { title: "Congestion Heatmap", path: "/traffic/congestion" },
-    { title: "Accidents", path: "/traffic/incidents" },
-    { title: "Road Closures", path: "/traffic/routes" },
-    { title: "Public Transport", path: "/traffic/transport" },
-    { title: "Parking Management", path: "/traffic/parking" },
     { title: "Traffic Cameras", path: "/traffic/cameras" },
-    { title: "Emergency Vehicle Priority", path: "/traffic/emergency-priority" },
-    { title: "Traffic Analytics", path: "/traffic/analytics" },
-    { title: "AI Predictions", path: "/traffic/predictions" }
+    { title: "Live Traffic", path: "/traffic/live" },
+    { title: "Route Intelligence", path: "/traffic/route-intelligence" },
+    { title: "Traffic Signals", path: "/traffic/signals" },
+    { title: "Emergency Priority", path: "/traffic/emergency-priority" },
+    { title: "AI Predictions", path: "/traffic/predictions" },
+    { title: "Congestion & Density", path: "/traffic/congestion" },
+    { title: "Road Closures", path: "/traffic/road-closures" }
   ],
-
   //------------------------------------------------
   // HOSPITAL
   //------------------------------------------------

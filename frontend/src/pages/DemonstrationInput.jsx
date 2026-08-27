@@ -238,12 +238,22 @@ export default function DemonstrationInput() {
     }, 1200);
   };
 
-  const executeReplayPipeline = async () => {
+const executeReplayPipeline = async () => {
     try {
       console.log(`[DEBUG] DemonstrationInput: Executing Simulated Replay for Scenario ID: ${selectedScenarioId}`);
-      const res = await fetch(`http://localhost:5000/api/simulation/scenario/${selectedScenarioId}/log?location=${encodeURIComponent(selectedCamera.name)}`);
+      
+      // FIX: Send location, lat, and lng to the backend so the incident spawns at the correct camera
+      const queryParams = new URLSearchParams({
+          location: selectedCamera.name,
+          lat: selectedCamera.lat,
+          lng: selectedCamera.lng
+      }).toString();
+
+      const res = await fetch(`http://localhost:5000/api/simulation/scenario/${selectedScenarioId}/log?${queryParams}`);
       const data = await res.json();
       console.log("[DEBUG] DemonstrationInput: Replay Logs Fetched:", data);
+
+      // ... rest of the function stays exactly the same
 
       // Support for updated backend structure which wraps logs in data.logs
       const rawLogs = Array.isArray(data.logs) ? data.logs : (Array.isArray(data) ? data : [

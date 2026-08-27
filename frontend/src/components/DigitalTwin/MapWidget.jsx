@@ -57,17 +57,18 @@ const createCustomClusterIcon = (cluster) => {
 };
 
 // Critical incident marker — Now accepts `isSelected` to differentiate the active target
+// Critical incident marker — Keeps red color, scales up when selected
 const createIncidentIcon = (severity, isSelected) => {
   const isCritical = severity === 'Critical' || severity === 'High';
   
-  // Make the selected marker distinctly larger
+  // Scale up if selected, but keep standard sizes otherwise
   const ringSize = isSelected ? 68 : (isCritical ? 48 : 36);
   const dotSize = isSelected ? 40 : (isCritical ? 30 : 22);
   const glyphSize = isSelected ? 20 : (isCritical ? 16 : 12);
 
-  // Selected incident turns Blue to stand out from the other active Red incidents
-  const glowColor = isSelected ? 'rgba(59, 130, 246, 0.55)' : 'rgba(220, 38, 38, 0.45)';
-  const bgColor = isSelected ? '#2563eb' : '#dc2626';
+  // Keep colors strictly RED
+  const glowColor = 'rgba(220, 38, 38, 0.45)';
+  const bgColor = '#dc2626';
 
   return L.divIcon({
     className: 'custom-incident-marker',

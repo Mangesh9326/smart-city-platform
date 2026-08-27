@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect } from "react";
 import {
   BrowserRouter as Router,
   Routes,
@@ -7,18 +7,17 @@ import {
 } from "react-router-dom";
 import MainLayout from "./layouts/MainLayout";
 import DepartmentLayout from "./layouts/DepartmentLayout";
-import socketService from './services/socketService';
+import socketService from "./services/socketService";
 import { departmentSidebars } from "./navigation/navigationConfig";
 
 // Import Pages
-import DemonstrationInput from './pages/DemonstrationInput';
-import UnifiedDashboard from './pages/Dashboard/UnifiedDashboard';
-import DigitalTwinMap from './components/DigitalTwin/MapWidget';
+import DemonstrationInput from "./pages/DemonstrationInput";
+import UnifiedDashboard from "./pages/Dashboard/UnifiedDashboard";
+import DigitalTwinMap from "./components/DigitalTwin/MapWidget";
 import TrafficOverview from "./pages/Departments/Traffic/Overview";
 import LiveTraffic from "./pages/Departments/Traffic/LiveTraffic";
 import TrafficSignals from "./pages/Departments/Traffic/TrafficSignals";
 import TrafficCameras from "./pages/Departments/Traffic/TrafficCameras";
-import Incidents from "./pages/Departments/Traffic/Incidents";
 import EmergencyPriority from "./pages/Departments/Traffic/EmergencyPriority";
 import CongestionHeatmap from "./pages/Departments/Traffic/CongestionHeatmap";
 import AIPredictions from "./pages/Departments/Traffic/AIPredictions";
@@ -35,20 +34,15 @@ export default function App() {
     socketService.connect();
     return () => socketService.disconnect();
   }, []);
+  
   return (
     <Router>
       <Routes>
         <Route path="/" element={<MainLayout />}>
           {/* Global Pages */}
-          <Route
-            index
-            element={<UnifiedDashboard />}
-          />
+          <Route index element={<UnifiedDashboard />} />
           <Route path="launchpad" element={<DemonstrationInput />} />
-          <Route
-            path="digital-twin"
-            element={<DigitalTwinMap />}
-          />
+          <Route path="digital-twin" element={<DigitalTwinMap />} />
 
           {/* Department: Traffic */}
           <Route
@@ -61,43 +55,14 @@ export default function App() {
             }
           >
             <Route index element={<TrafficOverview />} />
-            <Route path="live" element={<LiveTraffic />} />
-            <Route path="signals" element={<TrafficSignals />} />
             <Route path="cameras" element={<TrafficCameras />} />
-
-            {/* The rest of the routes use the placeholder until you duplicate the archetypes */}
-            <Route
-              path="congestion"
-              element={<CongestionHeatmap />}
-            />
-            <Route
-              path="incidents"
-              element={<Incidents/>}
-            />
-            <Route
-              path="routes"
-              element={<PlaceholderPage title="Road Closures" />}
-            />
-            <Route
-              path="transport"
-              element={<PlaceholderPage title="Public Transport" />}
-            />
-            <Route
-              path="parking"
-              element={<PlaceholderPage title="Parking Management" />}
-            />
-            <Route
-              path="emergency-priority"
-              element={<EmergencyPriority/>}
-            />
-            <Route
-              path="analytics"
-              element={<PlaceholderPage title="Traffic Analytics" />}
-            />
-            <Route
-              path="predictions"
-              element={<AIPredictions />}
-            />
+            <Route path="live" element={<LiveTraffic />} />
+            <Route path="route-intelligence" element={<PlaceholderPage title="Route Intelligence" />} />
+            <Route path="signals" element={<TrafficSignals />} />
+            <Route path="emergency-priority" element={<EmergencyPriority />} />
+            <Route path="predictions" element={<AIPredictions />} />
+            <Route path="congestion" element={<CongestionHeatmap />} />
+            <Route path="road-closures" element={<PlaceholderPage title="Road Closures" />} />
 
             <Route path="*" element={<Navigate to="/traffic" replace />} />
           </Route>

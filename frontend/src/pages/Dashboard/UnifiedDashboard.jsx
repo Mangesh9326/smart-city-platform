@@ -394,9 +394,20 @@ const IncidentDetailsPanel = ({ incident }) => {
   const s = SEVERITY_STYLES[incident.severity] || SEVERITY_STYLES['Medium'];
 
   const handleResolve = async () => {
+    if (!window.confirm("Are you sure you want to resolve and permanently delete this incident from the system?")) return;
+
     try {
-        await fetch(`http://localhost:5000/api/incidents/${incident.id}/resolve`, { method: 'PUT' });
-        alert("Incident archived in the database. MapStore will refresh shortly.");
+        // Updated to use the DELETE method and correct endpoint
+        const response = await fetch(`http://localhost:5000/api/simulation/incidents/${incident.id}`, { 
+            method: 'DELETE' 
+        });
+        
+        if (response.ok) {
+            alert("Incident resolved and removed from database. Refreshing dashboard.");
+            window.location.href = '/'; 
+        } else {
+            console.error("Failed to delete incident in DB");
+        }
     } catch(e) {
         console.error("Failed to resolve", e);
     }
@@ -407,9 +418,14 @@ const IncidentDetailsPanel = ({ incident }) => {
       <div className="border-b border-city-700/50 p-3.5 bg-city-800/30 flex items-center justify-between">
         <span className="text-xs font-bold text-gray-300 uppercase tracking-widest">Incident Details &amp; Location</span>
         <div className="flex items-center gap-2">
-            <button onClick={handleResolve} className="text-[9px] font-bold bg-city-700 hover:bg-red-500/80 text-gray-300 hover:text-white px-2 py-1 rounded border border-city-600 transition-colors cursor-pointer">MARK RESOLVED</button>
+            <button 
+              onClick={handleResolve} 
+              className="text-[9px] font-bold bg-city-700 hover:bg-red-500 hover:text-white text-gray-300 px-2 py-1 rounded border border-city-600 transition-colors cursor-pointer"
+            >
+              MARK RESOLVED
+            </button>
             <span className={`text-[9px] px-2 py-1 rounded border font-bold uppercase tracking-widest ${s.bg} ${s.border} ${s.text}`}>
-            {incident.severity}
+              {incident.severity}
             </span>
         </div>
       </div>
@@ -494,6 +510,7 @@ const FootagePanel = ({ incident }) => {
           </div>
         )}
 
+        {/* Top Overlay HUD */}
         <div className="absolute top-0 inset-x-0 flex items-center justify-between p-3 z-20 pointer-events-none">
           <span className="flex items-center gap-1.5 text-[10px] font-mono text-gray-300 bg-black/60 px-2 py-1 rounded border border-city-700/60">
             <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse"></span>
@@ -506,6 +523,7 @@ const FootagePanel = ({ incident }) => {
           </span>
         </div>
 
+        {/* AI Tag Overlay */}
         {incident.videoUrl && incident.aiTag && incident.aiTag !== 'N/A' && (
           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-20 pointer-events-none">
             <span className="text-[10px] font-mono bg-emerald-500/90 text-black px-1.5 py-0.5 rounded whitespace-nowrap shadow-lg">
@@ -514,13 +532,8 @@ const FootagePanel = ({ incident }) => {
           </div>
         )}
 
-        <div className="absolute bottom-0 inset-x-0 p-3 flex items-center gap-3 z-20 pointer-events-none">
-          <svg className="w-6 h-6 text-gray-300" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z" /></svg>
-          <div className="flex-1 h-1 bg-white/20 rounded-full overflow-hidden">
-            <div className="h-full w-2/3 bg-blue-500 rounded-full"></div>
-          </div>
-          <span className="text-[10px] font-mono text-gray-400">LIVE</span>
-        </div>
+        {/* Note: The static fake controls (SVG play button + custom progress bar) 
+            were removed from here so they don't overlap with the native browser controls. */}
       </div>
     </div>
   );
