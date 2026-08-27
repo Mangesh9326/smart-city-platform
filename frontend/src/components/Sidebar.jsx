@@ -34,7 +34,7 @@ const Sidebar = () => {
         {!isCollapsed && (
           <div className="overflow-hidden whitespace-nowrap">
             <h2 className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-teal-300">
-              AI CityOS
+              Smart CityOS
             </h2>
             <p className="text-[10px] text-gray-400 uppercase tracking-widest mt-0.5 font-mono">v2.0.26</p>
           </div>

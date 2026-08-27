@@ -93,7 +93,7 @@ export default function MainLayout() {
       <header className="h-16 bg-slate-900/80 backdrop-blur-md border-b border-slate-700/50 flex items-center justify-between px-6 z-20 shrink-0 shadow-lg">
         <div className="flex items-center gap-6">
           <span className="font-bold text-2xl bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-teal-300 tracking-tight">
-            AI CityOS
+            Smart CityOS
           </span>
           <div className="relative hidden md:block">
             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">

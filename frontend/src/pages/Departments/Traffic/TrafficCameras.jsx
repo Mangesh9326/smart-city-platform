@@ -220,7 +220,7 @@ export default function TrafficCameras() {
               {paginatedCameras.map((camera) => (
                 <div
                   key={camera.camera_id}
-                  className="min-h-60 overflow-hidden rounded-2xl border border-slate-700/70 bg-slate-950 shadow-lg transition duration-300 hover:-translate-y-1 hover:border-blue-500/60 hover:shadow-blue-950/25"
+                  className="min-h-60 overflow-hidden rounded-2xl border border-slate-700/70 bg-slate-950 shadow-lg transition duration-300 hover:border-blue-500/60 hover:shadow-blue-950/25"
                 >
                   <CameraFeedCard
                     camera={camera}
