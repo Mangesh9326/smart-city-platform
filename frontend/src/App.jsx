@@ -14,8 +14,11 @@ import { departmentSidebars } from "./navigation/navigationConfig";
 import DemonstrationInput from "./pages/DemonstrationInput";
 import UnifiedDashboard from "./pages/Dashboard/UnifiedDashboard";
 import DigitalTwinMap from "./components/DigitalTwin/MapWidget";
+import SimulateDemonstation from "./pages/SimulateDemonstation";
+//Traffic Pages
 import TrafficOverview from "./pages/Departments/Traffic/Overview";
 import LiveTraffic from "./pages/Departments/Traffic/LiveTraffic";
+import RouteIntelligence from "./pages/Departments/Traffic/RouteIntelligence";
 import TrafficSignals from "./pages/Departments/Traffic/TrafficSignals";
 import TrafficCameras from "./pages/Departments/Traffic/TrafficCameras";
 import EmergencyPriority from "./pages/Departments/Traffic/EmergencyPriority";
@@ -38,6 +41,7 @@ export default function App() {
   return (
     <Router>
       <Routes>
+          <Route path="simulate-scenarios" element={<SimulateDemonstation />} />
         <Route path="/" element={<MainLayout />}>
           {/* Global Pages */}
           <Route index element={<UnifiedDashboard />} />
@@ -57,7 +61,7 @@ export default function App() {
             <Route index element={<TrafficOverview />} />
             <Route path="cameras" element={<TrafficCameras />} />
             <Route path="live" element={<LiveTraffic />} />
-            <Route path="route-intelligence" element={<PlaceholderPage title="Route Intelligence" />} />
+            <Route path="route-intelligence" element={<RouteIntelligence/>} />
             <Route path="signals" element={<TrafficSignals />} />
             <Route path="emergency-priority" element={<EmergencyPriority />} />
             <Route path="predictions" element={<AIPredictions />} />

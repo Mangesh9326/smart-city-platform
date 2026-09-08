@@ -2,12 +2,12 @@
 -- PostgreSQL database dump
 --
 
-\restrict InYgC4B3Y4KIwY1KGVxkNQhyRxUVmbifwxyvGK5geFQgIM0BiAjS7KEzrIsXRKM
+\restrict 9nWPvITqFAfQfypZjf2FIPuRxiiJgS8DbdXdvQnhIeDjvhmJc9ZnufRPXnTseKq
 
 -- Dumped from database version 18.4
 -- Dumped by pg_dump version 18.4
 
--- Started on 2026-08-28 03:33:20
+-- Started on 2026-09-08 13:53:52
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
@@ -82,7 +82,7 @@ CREATE SEQUENCE public.live_detection_results_id_seq
 ALTER SEQUENCE public.live_detection_results_id_seq OWNER TO postgres;
 
 --
--- TOC entry 5133 (class 0 OID 0)
+-- TOC entry 5168 (class 0 OID 0)
 -- Dependencies: 230
 -- Name: live_detection_results_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
 --
@@ -124,7 +124,7 @@ CREATE SEQUENCE public.live_event_timeline_id_seq
 ALTER SEQUENCE public.live_event_timeline_id_seq OWNER TO postgres;
 
 --
--- TOC entry 5136 (class 0 OID 0)
+-- TOC entry 5171 (class 0 OID 0)
 -- Dependencies: 232
 -- Name: live_event_timeline_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
 --
@@ -165,7 +165,7 @@ CREATE SEQUENCE public.live_processing_logs_id_seq
 ALTER SEQUENCE public.live_processing_logs_id_seq OWNER TO postgres;
 
 --
--- TOC entry 5139 (class 0 OID 0)
+-- TOC entry 5174 (class 0 OID 0)
 -- Dependencies: 236
 -- Name: live_processing_logs_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
 --
@@ -209,7 +209,7 @@ CREATE SEQUENCE public.live_tracking_results_id_seq
 ALTER SEQUENCE public.live_tracking_results_id_seq OWNER TO postgres;
 
 --
--- TOC entry 5142 (class 0 OID 0)
+-- TOC entry 5177 (class 0 OID 0)
 -- Dependencies: 234
 -- Name: live_tracking_results_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
 --
@@ -257,7 +257,7 @@ CREATE SEQUENCE public.live_video_uploads_id_seq
 ALTER SEQUENCE public.live_video_uploads_id_seq OWNER TO postgres;
 
 --
--- TOC entry 5145 (class 0 OID 0)
+-- TOC entry 5180 (class 0 OID 0)
 -- Dependencies: 228
 -- Name: live_video_uploads_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
 --
@@ -317,7 +317,7 @@ CREATE SEQUENCE public.scenarios_id_seq
 ALTER SEQUENCE public.scenarios_id_seq OWNER TO postgres;
 
 --
--- TOC entry 5149 (class 0 OID 0)
+-- TOC entry 5184 (class 0 OID 0)
 -- Dependencies: 221
 -- Name: scenarios_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
 --
@@ -359,12 +359,113 @@ CREATE SEQUENCE public.timeline_events_id_seq
 ALTER SEQUENCE public.timeline_events_id_seq OWNER TO postgres;
 
 --
--- TOC entry 5152 (class 0 OID 0)
+-- TOC entry 5187 (class 0 OID 0)
 -- Dependencies: 223
 -- Name: timeline_events_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
 --
 
 ALTER SEQUENCE public.timeline_events_id_seq OWNED BY public.timeline_events.id;
+
+
+--
+-- TOC entry 239 (class 1259 OID 34023)
+-- Name: traffic_decisions; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.traffic_decisions (
+    id integer NOT NULL,
+    agent character varying(100) NOT NULL,
+    decision_type character varying(100) NOT NULL,
+    location character varying(255),
+    severity character varying(50),
+    recommendation text,
+    reason text,
+    payload jsonb,
+    status character varying(50) DEFAULT 'RECOMMENDED'::character varying,
+    source character varying(50) DEFAULT 'DEMONSTRATION'::character varying,
+    outcome character varying(50) DEFAULT 'PENDING'::character varying,
+    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP
+);
+
+
+ALTER TABLE public.traffic_decisions OWNER TO postgres;
+
+--
+-- TOC entry 238 (class 1259 OID 34022)
+-- Name: traffic_decisions_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+CREATE SEQUENCE public.traffic_decisions_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER SEQUENCE public.traffic_decisions_id_seq OWNER TO postgres;
+
+--
+-- TOC entry 5190 (class 0 OID 0)
+-- Dependencies: 238
+-- Name: traffic_decisions_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+--
+
+ALTER SEQUENCE public.traffic_decisions_id_seq OWNED BY public.traffic_decisions.id;
+
+
+--
+-- TOC entry 241 (class 1259 OID 34041)
+-- Name: traffic_demo_scenarios; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.traffic_demo_scenarios (
+    id bigint NOT NULL,
+    name character varying(150) NOT NULL,
+    type character varying(80) NOT NULL,
+    location character varying(255) NOT NULL,
+    latitude numeric(10,7) NOT NULL,
+    longitude numeric(10,7) NOT NULL,
+    severity character varying(20) NOT NULL,
+    description text NOT NULL,
+    traffic_level character varying(20),
+    density_level character varying(20),
+    flow_level character varying(20),
+    affected_approach character varying(255),
+    source character varying(50) DEFAULT 'DEMONSTRATION'::character varying NOT NULL,
+    is_demo boolean DEFAULT true NOT NULL,
+    event_data jsonb DEFAULT '{}'::jsonb NOT NULL,
+    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    updated_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    CONSTRAINT traffic_demo_scenarios_demonstration_check CHECK (((is_demo = true) AND ((source)::text = 'DEMONSTRATION'::text)))
+);
+
+
+ALTER TABLE public.traffic_demo_scenarios OWNER TO postgres;
+
+--
+-- TOC entry 240 (class 1259 OID 34040)
+-- Name: traffic_demo_scenarios_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+CREATE SEQUENCE public.traffic_demo_scenarios_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER SEQUENCE public.traffic_demo_scenarios_id_seq OWNER TO postgres;
+
+--
+-- TOC entry 5193 (class 0 OID 0)
+-- Dependencies: 240
+-- Name: traffic_demo_scenarios_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+--
+
+ALTER SEQUENCE public.traffic_demo_scenarios_id_seq OWNED BY public.traffic_demo_scenarios.id;
 
 
 --
@@ -401,7 +502,7 @@ CREATE SEQUENCE public.users_id_seq
 ALTER SEQUENCE public.users_id_seq OWNER TO postgres;
 
 --
--- TOC entry 5155 (class 0 OID 0)
+-- TOC entry 5196 (class 0 OID 0)
 -- Dependencies: 219
 -- Name: users_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
 --
@@ -429,7 +530,7 @@ CREATE TABLE public.vehicles (
 ALTER TABLE public.vehicles OWNER TO postgres;
 
 --
--- TOC entry 4922 (class 2604 OID 25683)
+-- TOC entry 4932 (class 2604 OID 25683)
 -- Name: live_detection_results id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
@@ -437,7 +538,7 @@ ALTER TABLE ONLY public.live_detection_results ALTER COLUMN id SET DEFAULT nextv
 
 
 --
--- TOC entry 4923 (class 2604 OID 25702)
+-- TOC entry 4933 (class 2604 OID 25702)
 -- Name: live_event_timeline id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
@@ -445,7 +546,7 @@ ALTER TABLE ONLY public.live_event_timeline ALTER COLUMN id SET DEFAULT nextval(
 
 
 --
--- TOC entry 4925 (class 2604 OID 25738)
+-- TOC entry 4935 (class 2604 OID 25738)
 -- Name: live_processing_logs id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
@@ -453,7 +554,7 @@ ALTER TABLE ONLY public.live_processing_logs ALTER COLUMN id SET DEFAULT nextval
 
 
 --
--- TOC entry 4924 (class 2604 OID 25722)
+-- TOC entry 4934 (class 2604 OID 25722)
 -- Name: live_tracking_results id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
@@ -461,7 +562,7 @@ ALTER TABLE ONLY public.live_tracking_results ALTER COLUMN id SET DEFAULT nextva
 
 
 --
--- TOC entry 4919 (class 2604 OID 25667)
+-- TOC entry 4929 (class 2604 OID 25667)
 -- Name: live_video_uploads id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
@@ -469,7 +570,7 @@ ALTER TABLE ONLY public.live_video_uploads ALTER COLUMN id SET DEFAULT nextval('
 
 
 --
--- TOC entry 4907 (class 2604 OID 25438)
+-- TOC entry 4917 (class 2604 OID 25438)
 -- Name: scenarios id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
@@ -477,7 +578,7 @@ ALTER TABLE ONLY public.scenarios ALTER COLUMN id SET DEFAULT nextval('public.sc
 
 
 --
--- TOC entry 4909 (class 2604 OID 25451)
+-- TOC entry 4919 (class 2604 OID 25451)
 -- Name: timeline_events id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
@@ -485,7 +586,23 @@ ALTER TABLE ONLY public.timeline_events ALTER COLUMN id SET DEFAULT nextval('pub
 
 
 --
--- TOC entry 4905 (class 2604 OID 25423)
+-- TOC entry 4937 (class 2604 OID 34026)
+-- Name: traffic_decisions id; Type: DEFAULT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.traffic_decisions ALTER COLUMN id SET DEFAULT nextval('public.traffic_decisions_id_seq'::regclass);
+
+
+--
+-- TOC entry 4942 (class 2604 OID 34044)
+-- Name: traffic_demo_scenarios id; Type: DEFAULT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.traffic_demo_scenarios ALTER COLUMN id SET DEFAULT nextval('public.traffic_demo_scenarios_id_seq'::regclass);
+
+
+--
+-- TOC entry 4915 (class 2604 OID 25423)
 -- Name: users id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
@@ -493,19 +610,19 @@ ALTER TABLE ONLY public.users ALTER COLUMN id SET DEFAULT nextval('public.users_
 
 
 --
--- TOC entry 5115 (class 0 OID 25635)
+-- TOC entry 5146 (class 0 OID 25635)
 -- Dependencies: 227
 -- Data for Name: incidents; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
 COPY public.incidents (incident_id, incident_type, severity, latitude, longitude, status, assigned_departments, timeline_events, created_at, upload_id) FROM stdin;
 611ae1cf-faf7-42b4-af55-5da3cc946fb8	TRAFFIC_INCIDENT	Critical	19.0238458	72.8496884	Active	\N	{"location": "Ruia College Road", "confidence": 0.98, "video_file": "5.mp4", "description": "Heavy Rain -> Multi-Vehicle Accident -> Coordinated Response", "scenario_id": "5"}	2026-08-27 01:31:12.837841	\N
-32f052b2-a780-44d0-8e80-f6e05d8cdff9	FIRE_HAZARD	Critical	19.0180000	72.8436000	Active	\N	{"location": "Dadar Railway Station", "confidence": 0.98, "video_file": "6.mp4", "description": "Commercial Building Fire -> Multi-Department Emergency Response", "scenario_id": "6"}	2026-08-27 01:31:47.474264	\N
+32f052b2-a780-44d0-8e80-f6e05d8cdff9	FIRE_HAZARD	Critical	19.0180000	72.8436000	Active	\N	{"location": "Dadar Railway Station", "confidence": 0.98, "video_file": "6.mp4", "description": "Commercial Building Fire -> Multi-Department Emergency Response", "scenario_id": "6"}	2026-08-31 20:06:00.934367	\N
 \.
 
 
 --
--- TOC entry 5119 (class 0 OID 25680)
+-- TOC entry 5150 (class 0 OID 25680)
 -- Dependencies: 231
 -- Data for Name: live_detection_results; Type: TABLE DATA; Schema: public; Owner: postgres
 --
@@ -515,7 +632,7 @@ COPY public.live_detection_results (id, upload_id, frame, object_detected, confi
 
 
 --
--- TOC entry 5121 (class 0 OID 25699)
+-- TOC entry 5152 (class 0 OID 25699)
 -- Dependencies: 233
 -- Data for Name: live_event_timeline; Type: TABLE DATA; Schema: public; Owner: postgres
 --
@@ -526,7 +643,7 @@ COPY public.live_event_timeline (id, upload_id, event_type, frame, timestamp_sec
 
 
 --
--- TOC entry 5125 (class 0 OID 25735)
+-- TOC entry 5156 (class 0 OID 25735)
 -- Dependencies: 237
 -- Data for Name: live_processing_logs; Type: TABLE DATA; Schema: public; Owner: postgres
 --
@@ -536,7 +653,7 @@ COPY public.live_processing_logs (id, upload_id, log_stage, message, logged_at) 
 
 
 --
--- TOC entry 5123 (class 0 OID 25719)
+-- TOC entry 5154 (class 0 OID 25719)
 -- Dependencies: 235
 -- Data for Name: live_tracking_results; Type: TABLE DATA; Schema: public; Owner: postgres
 --
@@ -546,7 +663,7 @@ COPY public.live_tracking_results (id, upload_id, tracking_id, object_class, cur
 
 
 --
--- TOC entry 5117 (class 0 OID 25664)
+-- TOC entry 5148 (class 0 OID 25664)
 -- Dependencies: 229
 -- Data for Name: live_video_uploads; Type: TABLE DATA; Schema: public; Owner: postgres
 --
@@ -558,7 +675,7 @@ COPY public.live_video_uploads (id, filename, filepath, camera_id, location, sta
 
 
 --
--- TOC entry 5113 (class 0 OID 25603)
+-- TOC entry 5144 (class 0 OID 25603)
 -- Dependencies: 225
 -- Data for Name: map_entities; Type: TABLE DATA; Schema: public; Owner: postgres
 --
@@ -1185,7 +1302,7 @@ f051e67e-a2ce-4d43-a2e2-d48bb87e01b3	traffic_signal	Sion Circle	19.0390000	72.86
 
 
 --
--- TOC entry 5110 (class 0 OID 25435)
+-- TOC entry 5141 (class 0 OID 25435)
 -- Dependencies: 222
 -- Data for Name: scenarios; Type: TABLE DATA; Schema: public; Owner: postgres
 --
@@ -1198,7 +1315,7 @@ COPY public.scenarios (id, name, description, duration_seconds, created_at) FROM
 
 
 --
--- TOC entry 5112 (class 0 OID 25448)
+-- TOC entry 5143 (class 0 OID 25448)
 -- Dependencies: 224
 -- Data for Name: timeline_events; Type: TABLE DATA; Schema: public; Owner: postgres
 --
@@ -1226,7 +1343,93 @@ COPY public.timeline_events (id, scenario_id, timestamp_second, event_type, payl
 
 
 --
--- TOC entry 5108 (class 0 OID 25420)
+-- TOC entry 5158 (class 0 OID 34023)
+-- Dependencies: 239
+-- Data for Name: traffic_decisions; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY public.traffic_decisions (id, agent, decision_type, location, severity, recommendation, reason, payload, status, source, outcome, created_at) FROM stdin;
+1	TrafficAgent	SIGNAL_OPTIMIZATION	Dadar Junction	SEVERE	Increase GREEN +10 sec	High traffic demand	{"prediction": "SEVERE"}	SIMULATED	DEMONSTRATION	SUCCESS	2026-09-01 20:49:05.094153
+2	TrafficAgent	ROUTE_RECOMMENDATION	Wadala Junction	HIGH	Divert via Eastern Freeway	Heavy commercial outflow	{"prediction": "HIGH"}	RECOMMENDED	DEMONSTRATION	SUCCESS	2026-09-01 20:42:05.094153
+3	TrafficAgent	SIGNAL_OPTIMIZATION	Sion Circle	HIGH	Extend inbound green duration	Merging bottleneck	{"prediction": "HIGH"}	SIMULATED	DEMONSTRATION	SUCCESS	2026-09-01 20:29:05.094153
+4	TrafficAgent	ROUTE_RECOMMENDATION	Bandra Junction	MODERATE	Maintain current route	Standard corporate sector outflow	{}	RECOMMENDED	DEMONSTRATION	PENDING	2026-09-01 20:14:05.094153
+5	TrafficAgent	TRAFFIC_ANALYSIS	BKC Entry	SEVERE	Wave Synchronization	Aligning 3 consecutive signals	{"prediction": "SEVERE"}	SIMULATED	DEMONSTRATION	SUCCESS	2026-09-01 19:54:05.094153
+6	TrafficAgent	TRAFFIC_ANALYSIS	\N	HIGH	Close affected road and initiate diversion	Collision involving heavy vehicles. Lanes blocked at Dadar–Wadala corridor. Rerouting active.	{"risks": ["Secondary collisions", "Gridlock on alternative routes"], "reasoning": "Collision involving heavy vehicles. Lanes blocked at Dadar–Wadala corridor. Rerouting active.", "towTrucks": 2, "confidence": "92%", "collaborators": ["PoliceAgent", "HospitalAgent"], "officersDeployed": 6, "expectedCongestion": "88%"}	RECOMMENDED	DEMONSTRATION	PENDING	2026-09-01 21:40:46.456613
+7	TrafficAgent	TRAFFIC_ANALYSIS	\N	HIGH	Close affected road and initiate diversion	Collision involving heavy vehicles. Lanes blocked at Dadar–Wadala corridor. Rerouting active.	{"risks": ["Secondary collisions", "Gridlock on alternative routes"], "reasoning": "Collision involving heavy vehicles. Lanes blocked at Dadar–Wadala corridor. Rerouting active.", "towTrucks": 2, "confidence": "92%", "collaborators": ["PoliceAgent", "HospitalAgent"], "officersDeployed": 6, "expectedCongestion": "88%"}	RECOMMENDED	DEMONSTRATION	PENDING	2026-09-01 21:40:49.422451
+8	TrafficAgent	ROAD_CLOSURE_DIVERSION	Wadala	HIGH	Recommend diversion via Sion–Matunga Link	WHAT: road closure at Wadala. WHY: the configured road section is unavailable. DECISION: divert via Sion–Matunga Link. EXPECTED RESULT: avoid the closed road.	{"signal": null, "source": "DEMONSTRATION", "status": "RECOMMENDED", "outcome": "PENDING", "location": "Wadala", "prediction": null, "decisionType": "ROAD_CLOSURE_DIVERSION", "currentCondition": "HIGH", "densityPrediction": null, "predictedCondition": null, "routeRecommendation": {"id": "wadala-alt", "name": "Sion–Matunga Link", "reason": "Lower predicted traffic impact from the supplied route conditions.", "source": "DEMONSTRATION", "affectedRoutes": ["Wadala Main Road"]}}	RECOMMENDED	DEMONSTRATION	PENDING	2026-09-01 21:41:05.764856
+9	TrafficAgent	SIGNAL_OPTIMIZATION	Sion Circle	HIGH	Recommend GREEN +5s / RED -5s	WHAT: HIGH traffic detected at Sion Circle. WHY: Assessment combines HIGH traffic inputs.. DECISION: Recommend GREEN +5s / RED -5s. EXPECTED RESULT: Reduce queue buildup on the affected approach while preserving the configured signal cycle.	{"signal": {"signalId": "f051e67e-a2ce-4d43-a2e2-d48bb87e01b3", "currentRed": 45, "currentGreen": 35, "optimizedRed": 40, "redAdjustment": -5, "optimizedGreen": 40, "greenAdjustment": 5, "affectedApproach": null}, "source": "DEMONSTRATION", "status": "SIMULATED", "outcome": "PENDING", "location": "Sion Circle", "prediction": {"type": "CONGESTION", "reason": "Current conditions are expected to persist based on deterministic demonstration rules.", "source": "DEMONSTRATION", "confidence": 0.8, "currentState": "HIGH", "horizonMinutes": 15, "predictedState": "HIGH"}, "decisionType": "SIGNAL_OPTIMIZATION", "currentCondition": "HIGH", "densityPrediction": {"type": "DENSITY", "reason": "Deterministic demonstration estimate based on density and signal demand.", "source": "DEMONSTRATION", "confidence": 0.75, "currentState": "HIGH", "horizonMinutes": 20, "predictedState": "HIGH"}, "predictedCondition": "HIGH", "routeRecommendation": null}	SIMULATED	DEMONSTRATION	PENDING	2026-09-01 21:41:53.88357
+10	TrafficAgent	SIGNAL_OPTIMIZATION	Bandra Junction	HIGH	Recommend GREEN +5s / RED -5s	WHAT: HIGH traffic detected at Bandra Junction. WHY: Assessment combines HIGH traffic inputs.. DECISION: Recommend GREEN +5s / RED -5s. EXPECTED RESULT: Reduce queue buildup on the affected approach while preserving the configured signal cycle.	{"signal": {"signalId": "17a7ee5c-ab37-4fe4-b99e-013c4cea85d2", "currentRed": 45, "currentGreen": 45, "optimizedRed": 40, "redAdjustment": -5, "optimizedGreen": 50, "greenAdjustment": 5, "affectedApproach": null}, "source": "DEMONSTRATION", "status": "SIMULATED", "outcome": "PENDING", "location": "Bandra Junction", "prediction": {"type": "CONGESTION", "reason": "Current conditions are expected to persist based on deterministic demonstration rules.", "source": "DEMONSTRATION", "confidence": 0.8, "currentState": "HIGH", "horizonMinutes": 15, "predictedState": "HIGH"}, "decisionType": "SIGNAL_OPTIMIZATION", "currentCondition": "HIGH", "densityPrediction": {"type": "DENSITY", "reason": "Deterministic demonstration estimate based on density and signal demand.", "source": "DEMONSTRATION", "confidence": 0.75, "currentState": "HIGH", "horizonMinutes": 20, "predictedState": "HIGH"}, "predictedCondition": "HIGH", "routeRecommendation": null}	SIMULATED	DEMONSTRATION	PENDING	2026-09-01 21:42:01.816954
+11	TrafficAgent	SIGNAL_OPTIMIZATION	Dadar Junction	SEVERE	Recommend GREEN +8s / RED -8s	WHAT: SEVERE traffic detected at Dadar Junction. WHY: Assessment combines SEVERE traffic inputs.. DECISION: Recommend GREEN +8s / RED -8s. EXPECTED RESULT: Reduce queue buildup on the affected approach while preserving the configured signal cycle.	{"signal": {"signalId": "af67a23b-986a-4372-a405-eaecf1f88565", "currentRed": 40, "currentGreen": 30, "optimizedRed": 32, "redAdjustment": -8, "optimizedGreen": 38, "greenAdjustment": 8, "affectedApproach": null}, "source": "DEMONSTRATION", "status": "SIMULATED", "outcome": "PENDING", "location": "Dadar Junction", "prediction": {"type": "CONGESTION", "reason": "Current conditions are expected to persist based on deterministic demonstration rules.", "source": "DEMONSTRATION", "confidence": 0.8, "currentState": "SEVERE", "horizonMinutes": 15, "predictedState": "SEVERE"}, "decisionType": "SIGNAL_OPTIMIZATION", "currentCondition": "SEVERE", "densityPrediction": {"type": "DENSITY", "reason": "Deterministic demonstration estimate based on density and signal demand.", "source": "DEMONSTRATION", "confidence": 0.75, "currentState": "SEVERE", "horizonMinutes": 20, "predictedState": "SEVERE"}, "predictedCondition": "SEVERE", "routeRecommendation": null}	SIMULATED	DEMONSTRATION	PENDING	2026-09-01 21:42:03.830791
+12	TrafficAgent	SIGNAL_OPTIMIZATION	Worli Junction	MODERATE	Maintain current signal timing	WHAT: MODERATE traffic detected at Worli Junction. WHY: Assessment combines MODERATE traffic inputs.. DECISION: Maintain current signal timing. EXPECTED RESULT: Reduce queue buildup on the affected approach while preserving the configured signal cycle.	{"signal": {"signalId": "894ff76c-a263-4ed0-9c00-5a3060440eba", "currentRed": 35, "currentGreen": 35, "optimizedRed": 35, "redAdjustment": 0, "optimizedGreen": 35, "greenAdjustment": 0, "affectedApproach": null}, "source": "DEMONSTRATION", "status": "RECOMMENDED", "outcome": "PENDING", "location": "Worli Junction", "prediction": {"type": "CONGESTION", "reason": "Current conditions are expected to persist based on deterministic demonstration rules.", "source": "DEMONSTRATION", "confidence": 0.8, "currentState": "MODERATE", "horizonMinutes": 15, "predictedState": "MODERATE"}, "decisionType": "SIGNAL_OPTIMIZATION", "currentCondition": "MODERATE", "densityPrediction": {"type": "DENSITY", "reason": "Deterministic demonstration estimate based on density and signal demand.", "source": "DEMONSTRATION", "confidence": 0.75, "currentState": "MODERATE", "horizonMinutes": 20, "predictedState": "MODERATE"}, "predictedCondition": "MODERATE", "routeRecommendation": null}	RECOMMENDED	DEMONSTRATION	PENDING	2026-09-01 21:42:09.079211
+13	TrafficAgent	SIGNAL_OPTIMIZATION	Dadar Junction	SEVERE	Recommend GREEN +8s / RED -8s	WHAT: SEVERE traffic detected at Dadar Junction. WHY: Assessment combines SEVERE, HIGH, HIGH, SEVERE, SEVERE traffic inputs and the previous observed state.. DECISION: Recommend GREEN +8s / RED -8s. EXPECTED RESULT: Reduce queue buildup on the affected approach while preserving the configured signal cycle.	{"signal": {"signalId": "DADAR-WADALA-01", "currentRed": 48, "currentGreen": 42, "optimizedRed": 40, "redAdjustment": -8, "optimizedGreen": 50, "greenAdjustment": 8, "affectedApproach": "Dadar → Wadala"}, "source": "DEMONSTRATION", "status": "SIMULATED", "outcome": "PENDING", "location": "Dadar Junction", "prediction": {"type": "CONGESTION", "reason": "Provided by the configured prediction input.", "source": "DEMONSTRATION", "confidence": 0.8, "currentState": "SEVERE", "horizonMinutes": 15, "predictedState": "CRITICAL"}, "decisionType": "SIGNAL_OPTIMIZATION", "currentCondition": "SEVERE", "densityPrediction": {"type": "DENSITY", "reason": "Deterministic demonstration estimate based on density and signal demand.", "source": "DEMONSTRATION", "confidence": 0.75, "currentState": "HIGH", "horizonMinutes": 20, "predictedState": "CRITICAL"}, "predictedCondition": "CRITICAL", "routeRecommendation": {"id": "dadar-matunga-link", "name": "Matunga Link Road", "reason": "Lower predicted traffic impact from the supplied route conditions.", "source": "DEMONSTRATION", "affectedRoutes": []}}	SIMULATED	DEMONSTRATION	PENDING	2026-09-01 22:52:41.10847
+14	TrafficAgent	EMERGENCY_ROUTE_SIMULATION	Dadar → Sion → KEM Hospital	CRITICAL	Recommend simulated signal priority along the emergency route	SIMULATION ONLY: priority timing is recommended across Dadar Junction, Sion Circle, KEM Hospital approach; no real Mumbai traffic signal is controlled.	{"source": "DEMONSTRATION", "outcome": "PENDING", "location": "Dadar → Sion → KEM Hospital", "simulation": true, "decisionType": "EMERGENCY_ROUTE_SIMULATION", "intersections": ["Dadar Junction", "Sion Circle", "KEM Hospital approach"]}	SIMULATED	DEMONSTRATION	PENDING	2026-09-01 22:57:16.102369
+15	TrafficAgent	ROAD_CLOSURE_DIVERSION	{"city":"Mumbai","name":"Wadala","latitude":19.0176,"longitude":72.858}	HIGH	Restrict closed road and monitor diversions	WHAT: road closure at [object Object]. WHY: the configured road section is unavailable. DECISION: restrict the affected approach. EXPECTED RESULT: avoid the closed road.	{"signal": null, "source": "DEMONSTRATION", "status": "RECOMMENDED", "outcome": "PENDING", "location": {"city": "Mumbai", "name": "Wadala", "latitude": 19.0176, "longitude": 72.858}, "prediction": null, "decisionType": "ROAD_CLOSURE_DIVERSION", "currentCondition": "HIGH", "densityPrediction": null, "predictedCondition": null, "routeRecommendation": null}	RECOMMENDED	DEMONSTRATION	PENDING	2026-09-01 23:04:37.62578
+16	TrafficAgent	TRAFFIC_ANALYSIS	\N	HIGH	Close affected road and initiate diversion	Collision involving heavy vehicles. Lanes blocked at [object Object]. Rerouting active.	{"risks": ["Secondary collisions", "Gridlock on alternative routes"], "reasoning": "Collision involving heavy vehicles. Lanes blocked at [object Object]. Rerouting active.", "towTrucks": 1, "confidence": "92%", "collaborators": ["PoliceAgent", "HospitalAgent"], "officersDeployed": 2, "expectedCongestion": "42%"}	RECOMMENDED	DEMONSTRATION	PENDING	2026-09-01 23:17:06.528673
+17	TrafficAgent	TRAFFIC_ANALYSIS	\N	HIGH	Close affected road and initiate diversion	Collision involving heavy vehicles. Lanes blocked at [object Object]. Rerouting active.	{"risks": ["Secondary collisions", "Gridlock on alternative routes"], "reasoning": "Collision involving heavy vehicles. Lanes blocked at [object Object]. Rerouting active.", "towTrucks": 1, "confidence": "92%", "collaborators": ["PoliceAgent", "HospitalAgent"], "officersDeployed": 2, "expectedCongestion": "42%"}	RECOMMENDED	DEMONSTRATION	PENDING	2026-09-01 23:18:40.483151
+18	TrafficAgent	TRAFFIC_ANALYSIS	\N	HIGH	Close affected road and initiate diversion	Collision involving heavy vehicles. Lanes blocked at [object Object]. Rerouting active.	{"risks": ["Secondary collisions", "Gridlock on alternative routes"], "reasoning": "Collision involving heavy vehicles. Lanes blocked at [object Object]. Rerouting active.", "towTrucks": 1, "confidence": "92%", "collaborators": ["PoliceAgent", "HospitalAgent"], "officersDeployed": 2, "expectedCongestion": "42%"}	RECOMMENDED	DEMONSTRATION	PENDING	2026-09-01 23:19:31.363554
+19	TrafficAgent	EMERGENCY_ROUTE_SIMULATION	{"city":"Mumbai","name":"Dadar → Sion → KEM Hospital"}	CRITICAL	Recommend simulated signal priority along the emergency route	SIMULATION ONLY: priority timing is recommended across [object Object]; no real Mumbai traffic signal is controlled.	{"source": "DEMONSTRATION", "outcome": "PENDING", "location": {"city": "Mumbai", "name": "Dadar → Sion → KEM Hospital"}, "simulation": true, "decisionType": "EMERGENCY_ROUTE_SIMULATION", "intersections": []}	SIMULATED	DEMONSTRATION	PENDING	2026-09-01 23:19:54.354596
+20	TrafficAgent	TRAFFIC_ANALYSIS	\N	HIGH	Close affected road and initiate diversion	Collision involving heavy vehicles. Lanes blocked at [object Object]. Rerouting active.	{"risks": ["Secondary collisions", "Gridlock on alternative routes"], "reasoning": "Collision involving heavy vehicles. Lanes blocked at [object Object]. Rerouting active.", "towTrucks": 1, "confidence": "92%", "collaborators": ["PoliceAgent", "HospitalAgent"], "officersDeployed": 2, "expectedCongestion": "42%"}	RECOMMENDED	DEMONSTRATION	PENDING	2026-09-01 23:22:56.81364
+21	TrafficAgent	ROAD_CLOSURE_DIVERSION	{"city":"Mumbai","name":"Wadala","latitude":19.0176,"longitude":72.858}	HIGH	Restrict closed road and monitor diversions	WHAT: road closure at [object Object]. WHY: the configured road section is unavailable. DECISION: restrict the affected approach. EXPECTED RESULT: avoid the closed road.	{"signal": null, "source": "DEMONSTRATION", "status": "RECOMMENDED", "outcome": "PENDING", "location": {"city": "Mumbai", "name": "Wadala", "latitude": 19.0176, "longitude": 72.858}, "prediction": null, "decisionType": "ROAD_CLOSURE_DIVERSION", "currentCondition": "HIGH", "densityPrediction": null, "predictedCondition": null, "routeRecommendation": null}	RECOMMENDED	DEMONSTRATION	PENDING	2026-09-01 23:33:54.751962
+22	TrafficAgent	ROUTE_RECOMMENDATION	Dadar Junction	Moderate	Recommend Route A	WHAT: Route A was evaluated against available route conditions. WHY: Lower predicted traffic impact from the supplied route conditions.. DECISION: Recommend Route A. EXPECTED RESULT: Lower predicted traffic impact for the journey.	{"signal": null, "source": "DEMONSTRATION", "status": "RECOMMENDED", "outcome": "PENDING", "location": "Dadar Junction", "prediction": null, "decisionType": "ROUTE_RECOMMENDATION", "currentCondition": "MODERATE", "densityPrediction": null, "predictedCondition": null, "routeRecommendation": {"id": 0, "name": "Route A", "reason": "Lower predicted traffic impact from the supplied route conditions.", "source": "DEMONSTRATION", "affectedRoutes": []}}	RECOMMENDED	DEMONSTRATION	PENDING	2026-09-01 23:37:19.105871
+23	TrafficAgent	ROUTE_RECOMMENDATION	Dadar Junction	Moderate	Recommend Route A	WHAT: Route A was evaluated against available route conditions. WHY: Lower predicted traffic impact from the supplied route conditions.. DECISION: Recommend Route A. EXPECTED RESULT: Lower predicted traffic impact for the journey.	{"signal": null, "source": "DEMONSTRATION", "status": "RECOMMENDED", "outcome": "PENDING", "location": "Dadar Junction", "prediction": null, "decisionType": "ROUTE_RECOMMENDATION", "currentCondition": "MODERATE", "densityPrediction": null, "predictedCondition": null, "routeRecommendation": {"id": 0, "name": "Route A", "reason": "Lower predicted traffic impact from the supplied route conditions.", "source": "DEMONSTRATION", "affectedRoutes": []}}	RECOMMENDED	DEMONSTRATION	PENDING	2026-09-01 23:42:12.588462
+24	TrafficAgent	ROUTE_RECOMMENDATION	Dadar–Wadala corridor	Moderate	Recommend Route A	WHAT: Route A was evaluated against available route conditions. WHY: Lower predicted traffic impact from the supplied route conditions.. DECISION: Recommend Route A. EXPECTED RESULT: Lower predicted traffic impact for the journey.	{"signal": null, "source": "DEMONSTRATION", "status": "RECOMMENDED", "outcome": "PENDING", "location": "Dadar–Wadala corridor", "prediction": null, "decisionType": "ROUTE_RECOMMENDATION", "currentCondition": "MODERATE", "densityPrediction": null, "predictedCondition": null, "routeRecommendation": {"id": 0, "name": "Route A", "reason": "Lower predicted traffic impact from the supplied route conditions.", "source": "DEMONSTRATION", "affectedRoutes": []}}	RECOMMENDED	DEMONSTRATION	PENDING	2026-09-01 23:42:17.819805
+25	TrafficAgent	TRAFFIC_ANALYSIS	\N	HIGH	Close affected road and initiate diversion	Collision involving heavy vehicles. Lanes blocked at [object Object]. Rerouting active.	{"risks": ["Secondary collisions", "Gridlock on alternative routes"], "reasoning": "Collision involving heavy vehicles. Lanes blocked at [object Object]. Rerouting active.", "towTrucks": 1, "confidence": "92%", "collaborators": ["PoliceAgent", "HospitalAgent"], "officersDeployed": 2, "expectedCongestion": "42%"}	RECOMMENDED	DEMONSTRATION	PENDING	2026-09-01 23:42:32.638041
+26	TrafficAgent	ROUTE_RECOMMENDATION	Dadar Junction	Moderate	Recommend Route A	WHAT: Route A was evaluated against available route conditions. WHY: Lower predicted traffic impact from the supplied route conditions.. DECISION: Recommend Route A. EXPECTED RESULT: Lower predicted traffic impact for the journey.	{"signal": null, "source": "DEMONSTRATION", "status": "RECOMMENDED", "outcome": "PENDING", "location": "Dadar Junction", "prediction": null, "decisionType": "ROUTE_RECOMMENDATION", "currentCondition": "MODERATE", "densityPrediction": null, "predictedCondition": null, "routeRecommendation": {"id": 0, "name": "Route A", "reason": "Lower predicted traffic impact from the supplied route conditions.", "source": "DEMONSTRATION", "affectedRoutes": []}}	RECOMMENDED	DEMONSTRATION	PENDING	2026-09-01 23:44:31.687791
+27	TrafficAgent	TRAFFIC_ANALYSIS	{"city":"Mumbai","name":"Dadar Junction","latitude":19.0189,"longitude":72.8437}	SEVERE	Monitor traffic condition	WHAT: SEVERE traffic detected at Dadar Junction. WHY: Assessment combines SEVERE, HIGH, HIGH, LOW, SEVERE traffic inputs.. DECISION: Monitor traffic condition. EXPECTED RESULT: Maintain the current signal plan while monitoring for a material change.	{"signal": {}, "source": "DEMONSTRATION", "status": "INSUFFICIENT_DATA", "outcome": "PENDING", "location": {"city": "Mumbai", "name": "Dadar Junction", "latitude": 19.0189, "longitude": 72.8437}, "prediction": {"type": "CONGESTION", "reason": "Sustained demand may increase congestion based on deterministic demonstration rules.", "source": "DEMONSTRATION", "confidence": 0.8, "currentState": "SEVERE", "horizonMinutes": 15, "predictedState": "CRITICAL"}, "decisionType": "TRAFFIC_ANALYSIS", "currentCondition": "SEVERE", "densityPrediction": {"type": "DENSITY", "reason": "Deterministic demonstration estimate based on density and signal demand.", "source": "DEMONSTRATION", "confidence": 0.75, "currentState": "HIGH", "horizonMinutes": 20, "predictedState": "CRITICAL"}, "predictedCondition": "CRITICAL", "routeRecommendation": null}	INSUFFICIENT_DATA	DEMONSTRATION	PENDING	2026-09-01 23:44:46.167853
+28	TrafficAgent	SIGNAL_OPTIMIZATION	Dadar Junction	SEVERE	Recommend GREEN +8s / RED -8s	WHAT: SEVERE traffic detected at Dadar Junction. WHY: Assessment combines SEVERE traffic inputs.. DECISION: Recommend GREEN +8s / RED -8s. EXPECTED RESULT: Reduce queue buildup on the affected approach while preserving the configured signal cycle.	{"signal": {"signalId": "af67a23b-986a-4372-a405-eaecf1f88565", "currentRed": 40, "currentGreen": 30, "optimizedRed": 32, "redAdjustment": -8, "optimizedGreen": 38, "greenAdjustment": 8, "affectedApproach": null}, "source": "DEMONSTRATION", "status": "SIMULATED", "outcome": "PENDING", "location": "Dadar Junction", "prediction": {"type": "CONGESTION", "reason": "Current conditions are expected to persist based on deterministic demonstration rules.", "source": "DEMONSTRATION", "confidence": 0.8, "currentState": "SEVERE", "horizonMinutes": 15, "predictedState": "SEVERE"}, "decisionType": "SIGNAL_OPTIMIZATION", "currentCondition": "SEVERE", "densityPrediction": {"type": "DENSITY", "reason": "Deterministic demonstration estimate based on density and signal demand.", "source": "DEMONSTRATION", "confidence": 0.75, "currentState": "SEVERE", "horizonMinutes": 20, "predictedState": "SEVERE"}, "predictedCondition": "SEVERE", "routeRecommendation": null}	SIMULATED	DEMONSTRATION	PENDING	2026-09-02 02:00:30.62778
+29	TrafficAgent	SIGNAL_OPTIMIZATION	Wadala Junction	HIGH	Recommend GREEN +5s / RED -5s	WHAT: HIGH traffic detected at Wadala Junction. WHY: Assessment combines HIGH traffic inputs.. DECISION: Recommend GREEN +5s / RED -5s. EXPECTED RESULT: Reduce queue buildup on the affected approach while preserving the configured signal cycle.	{"signal": {"signalId": "978f1968-9211-4173-8c3f-02e5a7ef9742", "currentRed": 35, "currentGreen": 35, "optimizedRed": 30, "redAdjustment": -5, "optimizedGreen": 40, "greenAdjustment": 5, "affectedApproach": null}, "source": "DEMONSTRATION", "status": "SIMULATED", "outcome": "PENDING", "location": "Wadala Junction", "prediction": {"type": "CONGESTION", "reason": "Current conditions are expected to persist based on deterministic demonstration rules.", "source": "DEMONSTRATION", "confidence": 0.8, "currentState": "HIGH", "horizonMinutes": 15, "predictedState": "HIGH"}, "decisionType": "SIGNAL_OPTIMIZATION", "currentCondition": "HIGH", "densityPrediction": {"type": "DENSITY", "reason": "Deterministic demonstration estimate based on density and signal demand.", "source": "DEMONSTRATION", "confidence": 0.75, "currentState": "HIGH", "horizonMinutes": 20, "predictedState": "HIGH"}, "predictedCondition": "HIGH", "routeRecommendation": null}	SIMULATED	DEMONSTRATION	PENDING	2026-09-02 02:00:34.127344
+30	TrafficAgent	SIGNAL_OPTIMIZATION	Sion Circle	HIGH	Recommend GREEN +5s / RED -5s	WHAT: HIGH traffic detected at Sion Circle. WHY: Assessment combines HIGH traffic inputs.. DECISION: Recommend GREEN +5s / RED -5s. EXPECTED RESULT: Reduce queue buildup on the affected approach while preserving the configured signal cycle.	{"signal": {"signalId": "f051e67e-a2ce-4d43-a2e2-d48bb87e01b3", "currentRed": 45, "currentGreen": 35, "optimizedRed": 40, "redAdjustment": -5, "optimizedGreen": 40, "greenAdjustment": 5, "affectedApproach": null}, "source": "DEMONSTRATION", "status": "SIMULATED", "outcome": "PENDING", "location": "Sion Circle", "prediction": {"type": "CONGESTION", "reason": "Current conditions are expected to persist based on deterministic demonstration rules.", "source": "DEMONSTRATION", "confidence": 0.8, "currentState": "HIGH", "horizonMinutes": 15, "predictedState": "HIGH"}, "decisionType": "SIGNAL_OPTIMIZATION", "currentCondition": "HIGH", "densityPrediction": {"type": "DENSITY", "reason": "Deterministic demonstration estimate based on density and signal demand.", "source": "DEMONSTRATION", "confidence": 0.75, "currentState": "HIGH", "horizonMinutes": 20, "predictedState": "HIGH"}, "predictedCondition": "HIGH", "routeRecommendation": null}	SIMULATED	DEMONSTRATION	PENDING	2026-09-02 02:00:36.096236
+31	TrafficAgent	SIGNAL_OPTIMIZATION	Worli Junction	MODERATE	Maintain current signal timing	WHAT: MODERATE traffic detected at Worli Junction. WHY: Assessment combines MODERATE traffic inputs.. DECISION: Maintain current signal timing. EXPECTED RESULT: Reduce queue buildup on the affected approach while preserving the configured signal cycle.	{"signal": {"signalId": "894ff76c-a263-4ed0-9c00-5a3060440eba", "currentRed": 35, "currentGreen": 35, "optimizedRed": 35, "redAdjustment": 0, "optimizedGreen": 35, "greenAdjustment": 0, "affectedApproach": null}, "source": "DEMONSTRATION", "status": "RECOMMENDED", "outcome": "PENDING", "location": "Worli Junction", "prediction": {"type": "CONGESTION", "reason": "Current conditions are expected to persist based on deterministic demonstration rules.", "source": "DEMONSTRATION", "confidence": 0.8, "currentState": "MODERATE", "horizonMinutes": 15, "predictedState": "MODERATE"}, "decisionType": "SIGNAL_OPTIMIZATION", "currentCondition": "MODERATE", "densityPrediction": {"type": "DENSITY", "reason": "Deterministic demonstration estimate based on density and signal demand.", "source": "DEMONSTRATION", "confidence": 0.75, "currentState": "MODERATE", "horizonMinutes": 20, "predictedState": "MODERATE"}, "predictedCondition": "MODERATE", "routeRecommendation": null}	RECOMMENDED	DEMONSTRATION	PENDING	2026-09-02 02:00:39.303543
+32	TrafficAgent	TRAFFIC_ANALYSIS	\N	HIGH	Close affected road and initiate diversion	Collision involving heavy vehicles. Lanes blocked at [object Object]. Rerouting active.	{"risks": ["Secondary collisions", "Gridlock on alternative routes"], "reasoning": "Collision involving heavy vehicles. Lanes blocked at [object Object]. Rerouting active.", "towTrucks": 1, "confidence": "92%", "collaborators": ["PoliceAgent", "HospitalAgent"], "officersDeployed": 2, "expectedCongestion": "42%"}	RECOMMENDED	DEMONSTRATION	PENDING	2026-09-02 02:00:57.622034
+33	TrafficAgent	TRAFFIC_ANALYSIS	{"city":"Mumbai","name":"Dadar Junction","latitude":19.0189,"longitude":72.8437}	SEVERE	Monitor traffic condition	WHAT: SEVERE traffic detected at Dadar Junction. WHY: Assessment combines SEVERE, HIGH, HIGH, LOW, SEVERE traffic inputs.. DECISION: Monitor traffic condition. EXPECTED RESULT: Maintain the current signal plan while monitoring for a material change.	{"signal": {}, "source": "DEMONSTRATION", "status": "INSUFFICIENT_DATA", "outcome": "PENDING", "location": {"city": "Mumbai", "name": "Dadar Junction", "latitude": 19.0189, "longitude": 72.8437}, "prediction": {"type": "CONGESTION", "reason": "Sustained demand may increase congestion based on deterministic demonstration rules.", "source": "DEMONSTRATION", "confidence": 0.8, "currentState": "SEVERE", "horizonMinutes": 15, "predictedState": "CRITICAL"}, "decisionType": "TRAFFIC_ANALYSIS", "currentCondition": "SEVERE", "densityPrediction": {"type": "DENSITY", "reason": "Deterministic demonstration estimate based on density and signal demand.", "source": "DEMONSTRATION", "confidence": 0.75, "currentState": "HIGH", "horizonMinutes": 20, "predictedState": "CRITICAL"}, "predictedCondition": "CRITICAL", "routeRecommendation": null}	INSUFFICIENT_DATA	DEMONSTRATION	PENDING	2026-09-02 02:14:34.423911
+34	TrafficAgent	TRAFFIC_ANALYSIS	{"city":"Mumbai","name":"Dadar Junction","latitude":19.0189,"longitude":72.8437}	SEVERE	Monitor traffic condition	WHAT: SEVERE traffic detected at Dadar Junction. WHY: Assessment combines SEVERE, HIGH, HIGH, LOW, SEVERE traffic inputs.. DECISION: Monitor traffic condition. EXPECTED RESULT: Maintain the current signal plan while monitoring for a material change.	{"signal": {}, "source": "DEMONSTRATION", "status": "INSUFFICIENT_DATA", "outcome": "PENDING", "location": {"city": "Mumbai", "name": "Dadar Junction", "latitude": 19.0189, "longitude": 72.8437}, "prediction": {"type": "CONGESTION", "reason": "Sustained demand may increase congestion based on deterministic demonstration rules.", "source": "DEMONSTRATION", "confidence": 0.8, "currentState": "SEVERE", "horizonMinutes": 15, "predictedState": "CRITICAL"}, "decisionType": "TRAFFIC_ANALYSIS", "currentCondition": "SEVERE", "densityPrediction": {"type": "DENSITY", "reason": "Deterministic demonstration estimate based on density and signal demand.", "source": "DEMONSTRATION", "confidence": 0.75, "currentState": "HIGH", "horizonMinutes": 20, "predictedState": "CRITICAL"}, "predictedCondition": "CRITICAL", "routeRecommendation": null}	INSUFFICIENT_DATA	DEMONSTRATION	PENDING	2026-09-05 22:50:04.563067
+35	TrafficAgent	TRAFFIC_ANALYSIS	{"city":"Mumbai","name":"Dadar Junction","latitude":19.0189,"longitude":72.8437}	SEVERE	Monitor traffic condition	WHAT: SEVERE traffic detected at Dadar Junction. WHY: Assessment combines SEVERE, HIGH, HIGH, LOW, SEVERE traffic inputs.. DECISION: Monitor traffic condition. EXPECTED RESULT: Maintain the current signal plan while monitoring for a material change.	{"signal": {}, "source": "DEMONSTRATION", "status": "INSUFFICIENT_DATA", "outcome": "PENDING", "location": {"city": "Mumbai", "name": "Dadar Junction", "latitude": 19.0189, "longitude": 72.8437}, "prediction": {"type": "CONGESTION", "reason": "Sustained demand may increase congestion based on deterministic demonstration rules.", "source": "DEMONSTRATION", "confidence": 0.8, "currentState": "SEVERE", "horizonMinutes": 15, "predictedState": "CRITICAL"}, "decisionType": "TRAFFIC_ANALYSIS", "currentCondition": "SEVERE", "densityPrediction": {"type": "DENSITY", "reason": "Deterministic demonstration estimate based on density and signal demand.", "source": "DEMONSTRATION", "confidence": 0.75, "currentState": "HIGH", "horizonMinutes": 20, "predictedState": "CRITICAL"}, "predictedCondition": "CRITICAL", "routeRecommendation": null}	INSUFFICIENT_DATA	DEMONSTRATION	PENDING	2026-09-08 01:23:07.076348
+36	TrafficAgent	TRAFFIC_ANALYSIS	{"city":"Mumbai","name":"Dadar Junction","latitude":19.0189,"longitude":72.8437}	SEVERE	Monitor traffic condition	WHAT: SEVERE traffic detected at Dadar Junction. WHY: Assessment combines SEVERE, HIGH, HIGH, LOW, SEVERE traffic inputs.. DECISION: Monitor traffic condition. EXPECTED RESULT: Maintain the current signal plan while monitoring for a material change.	{"signal": {}, "source": "DEMONSTRATION", "status": "INSUFFICIENT_DATA", "outcome": "PENDING", "location": {"city": "Mumbai", "name": "Dadar Junction", "latitude": 19.0189, "longitude": 72.8437}, "prediction": {"type": "CONGESTION", "reason": "Sustained demand may increase congestion based on deterministic demonstration rules.", "source": "DEMONSTRATION", "confidence": 0.8, "currentState": "SEVERE", "horizonMinutes": 15, "predictedState": "CRITICAL"}, "decisionType": "TRAFFIC_ANALYSIS", "currentCondition": "SEVERE", "densityPrediction": {"type": "DENSITY", "reason": "Deterministic demonstration estimate based on density and signal demand.", "source": "DEMONSTRATION", "confidence": 0.75, "currentState": "HIGH", "horizonMinutes": 20, "predictedState": "CRITICAL"}, "predictedCondition": "CRITICAL", "routeRecommendation": null}	INSUFFICIENT_DATA	DEMONSTRATION	PENDING	2026-09-08 01:24:50.632937
+37	TrafficAgent	TRAFFIC_ANALYSIS	{"city":"Mumbai","name":"Dadar Junction","latitude":19.0189,"longitude":72.8437}	SEVERE	Monitor traffic condition	WHAT: SEVERE traffic detected at Dadar Junction. WHY: Assessment combines SEVERE, HIGH, HIGH, LOW, SEVERE traffic inputs.. DECISION: Monitor traffic condition. EXPECTED RESULT: Maintain the current signal plan while monitoring for a material change.	{"signal": {}, "source": "DEMONSTRATION", "status": "INSUFFICIENT_DATA", "outcome": "PENDING", "location": {"city": "Mumbai", "name": "Dadar Junction", "latitude": 19.0189, "longitude": 72.8437}, "prediction": {"type": "CONGESTION", "reason": "Sustained demand may increase congestion based on deterministic demonstration rules.", "source": "DEMONSTRATION", "confidence": 0.8, "currentState": "SEVERE", "horizonMinutes": 15, "predictedState": "CRITICAL"}, "decisionType": "TRAFFIC_ANALYSIS", "currentCondition": "SEVERE", "densityPrediction": {"type": "DENSITY", "reason": "Deterministic demonstration estimate based on density and signal demand.", "source": "DEMONSTRATION", "confidence": 0.75, "currentState": "HIGH", "horizonMinutes": 20, "predictedState": "CRITICAL"}, "predictedCondition": "CRITICAL", "routeRecommendation": null}	INSUFFICIENT_DATA	DEMONSTRATION	PENDING	2026-09-08 01:30:14.59308
+38	TrafficAgent	ROUTE_RECOMMENDATION	Dadar Junction	Moderate	Recommend Route A	WHAT: Route A was evaluated against available route conditions. WHY: Lower predicted traffic impact from the supplied route conditions.. DECISION: Recommend Route A. EXPECTED RESULT: Lower predicted traffic impact for the journey.	{"signal": null, "source": "DEMONSTRATION", "status": "RECOMMENDED", "outcome": "PENDING", "location": "Dadar Junction", "prediction": null, "decisionType": "ROUTE_RECOMMENDATION", "currentCondition": "MODERATE", "densityPrediction": null, "predictedCondition": null, "routeRecommendation": {"id": 0, "name": "Route A", "reason": "Lower predicted traffic impact from the supplied route conditions.", "source": "DEMONSTRATION", "affectedRoutes": []}}	RECOMMENDED	DEMONSTRATION	PENDING	2026-09-08 01:54:08.309654
+39	TrafficAgent	TRAFFIC_ANALYSIS	{"city":"Mumbai","name":"Dadar Junction","latitude":19.0189,"longitude":72.8437}	SEVERE	Monitor traffic condition	WHAT: SEVERE traffic detected at Dadar Junction. WHY: Assessment combines SEVERE, HIGH, HIGH, LOW, SEVERE traffic inputs.. DECISION: Monitor traffic condition. EXPECTED RESULT: Maintain the current signal plan while monitoring for a material change.	{"signal": {}, "source": "DEMONSTRATION", "status": "INSUFFICIENT_DATA", "outcome": "PENDING", "location": {"city": "Mumbai", "name": "Dadar Junction", "latitude": 19.0189, "longitude": 72.8437}, "prediction": {"type": "CONGESTION", "reason": "Sustained demand may increase congestion based on deterministic demonstration rules.", "source": "DEMONSTRATION", "confidence": 0.8, "currentState": "SEVERE", "horizonMinutes": 15, "predictedState": "CRITICAL"}, "decisionType": "TRAFFIC_ANALYSIS", "currentCondition": "SEVERE", "densityPrediction": {"type": "DENSITY", "reason": "Deterministic demonstration estimate based on density and signal demand.", "source": "DEMONSTRATION", "confidence": 0.75, "currentState": "HIGH", "horizonMinutes": 20, "predictedState": "CRITICAL"}, "predictedCondition": "CRITICAL", "routeRecommendation": null}	INSUFFICIENT_DATA	DEMONSTRATION	PENDING	2026-09-08 01:54:16.496969
+40	TrafficAgent	ROUTE_RECOMMENDATION	Wadala	Moderate	Recommend Route A	WHAT: Route A was evaluated against available route conditions. WHY: Lower predicted traffic impact from the supplied route conditions.. DECISION: Recommend Route A. EXPECTED RESULT: Lower predicted traffic impact for the journey.	{"signal": null, "source": "DEMONSTRATION", "status": "RECOMMENDED", "outcome": "PENDING", "location": "Wadala", "prediction": null, "decisionType": "ROUTE_RECOMMENDATION", "currentCondition": "MODERATE", "densityPrediction": null, "predictedCondition": null, "routeRecommendation": {"id": 0, "name": "Route A", "reason": "Lower predicted traffic impact from the supplied route conditions.", "source": "DEMONSTRATION", "affectedRoutes": []}}	RECOMMENDED	DEMONSTRATION	PENDING	2026-09-08 01:54:17.363823
+41	TrafficAgent	ROUTE_RECOMMENDATION	Wadala	Moderate	Recommend Route A	WHAT: Route A was evaluated against available route conditions. WHY: Lower predicted traffic impact from the supplied route conditions.. DECISION: Recommend Route A. EXPECTED RESULT: Lower predicted traffic impact for the journey.	{"signal": null, "source": "DEMONSTRATION", "status": "RECOMMENDED", "outcome": "PENDING", "location": "Wadala", "prediction": null, "decisionType": "ROUTE_RECOMMENDATION", "currentCondition": "MODERATE", "densityPrediction": null, "predictedCondition": null, "routeRecommendation": {"id": 0, "name": "Route A", "reason": "Lower predicted traffic impact from the supplied route conditions.", "source": "DEMONSTRATION", "affectedRoutes": []}}	RECOMMENDED	DEMONSTRATION	PENDING	2026-09-08 01:54:25.384939
+42	TrafficAgent	ROAD_CLOSURE_DIVERSION	{"city":"Mumbai","name":"Wadala","latitude":19.0176,"longitude":72.858}	HIGH	Restrict closed road and monitor diversions	WHAT: road closure at [object Object]. WHY: the configured road section is unavailable. DECISION: restrict the affected approach. EXPECTED RESULT: avoid the closed road.	{"signal": null, "source": "DEMONSTRATION", "status": "RECOMMENDED", "outcome": "PENDING", "location": {"city": "Mumbai", "name": "Wadala", "latitude": 19.0176, "longitude": 72.858}, "prediction": null, "decisionType": "ROAD_CLOSURE_DIVERSION", "currentCondition": "HIGH", "densityPrediction": null, "predictedCondition": null, "routeRecommendation": null}	RECOMMENDED	DEMONSTRATION	PENDING	2026-09-08 01:54:32.616221
+43	TrafficAgent	ROUTE_RECOMMENDATION	Wadala	Moderate	Recommend Route A	WHAT: Route A was evaluated against available route conditions. WHY: Lower predicted traffic impact from the supplied route conditions.. DECISION: Recommend Route A. EXPECTED RESULT: Lower predicted traffic impact for the journey.	{"signal": null, "source": "DEMONSTRATION", "status": "RECOMMENDED", "outcome": "PENDING", "location": "Wadala", "prediction": null, "decisionType": "ROUTE_RECOMMENDATION", "currentCondition": "MODERATE", "densityPrediction": null, "predictedCondition": null, "routeRecommendation": {"id": 0, "name": "Route A", "reason": "Lower predicted traffic impact from the supplied route conditions.", "source": "DEMONSTRATION", "affectedRoutes": []}}	RECOMMENDED	DEMONSTRATION	PENDING	2026-09-08 01:54:33.504974
+44	TrafficAgent	ROAD_CLOSURE_DIVERSION	{"city":"Mumbai","name":"Wadala","latitude":19.0176,"longitude":72.858}	HIGH	Restrict closed road and monitor diversions	WHAT: road closure at [object Object]. WHY: the configured road section is unavailable. DECISION: restrict the affected approach. EXPECTED RESULT: avoid the closed road.	{"signal": null, "source": "DEMONSTRATION", "status": "RECOMMENDED", "outcome": "PENDING", "location": {"city": "Mumbai", "name": "Wadala", "latitude": 19.0176, "longitude": 72.858}, "prediction": null, "decisionType": "ROAD_CLOSURE_DIVERSION", "currentCondition": "HIGH", "densityPrediction": null, "predictedCondition": null, "routeRecommendation": null}	RECOMMENDED	DEMONSTRATION	PENDING	2026-09-08 01:56:10.304069
+45	TrafficAgent	ROAD_CLOSURE_DIVERSION	{"city":"Mumbai","name":"Wadala","latitude":19.0176,"longitude":72.858}	HIGH	Restrict closed road and monitor diversions	WHAT: road closure at [object Object]. WHY: the configured road section is unavailable. DECISION: restrict the affected approach. EXPECTED RESULT: avoid the closed road.	{"signal": null, "source": "DEMONSTRATION", "status": "RECOMMENDED", "outcome": "PENDING", "location": {"city": "Mumbai", "name": "Wadala", "latitude": 19.0176, "longitude": 72.858}, "prediction": null, "decisionType": "ROAD_CLOSURE_DIVERSION", "currentCondition": "HIGH", "densityPrediction": null, "predictedCondition": null, "routeRecommendation": null}	RECOMMENDED	DEMONSTRATION	PENDING	2026-09-08 01:56:39.495813
+46	TrafficAgent	ROAD_CLOSURE_DIVERSION	{"city":"Mumbai","name":"Wadala","latitude":19.0176,"longitude":72.858}	HIGH	Restrict closed road and monitor diversions	WHAT: road closure at [object Object]. WHY: the configured road section is unavailable. DECISION: restrict the affected approach. EXPECTED RESULT: avoid the closed road.	{"signal": null, "source": "DEMONSTRATION", "status": "RECOMMENDED", "outcome": "PENDING", "location": {"city": "Mumbai", "name": "Wadala", "latitude": 19.0176, "longitude": 72.858}, "prediction": null, "decisionType": "ROAD_CLOSURE_DIVERSION", "currentCondition": "HIGH", "densityPrediction": null, "predictedCondition": null, "routeRecommendation": null}	RECOMMENDED	DEMONSTRATION	PENDING	2026-09-08 01:56:57.052635
+47	TrafficAgent	ROUTE_RECOMMENDATION	Wadala	Moderate	Recommend Route A	WHAT: Route A was evaluated against available route conditions. WHY: Lower predicted traffic impact from the supplied route conditions.. DECISION: Recommend Route A. EXPECTED RESULT: Lower predicted traffic impact for the journey.	{"signal": null, "source": "DEMONSTRATION", "status": "RECOMMENDED", "outcome": "PENDING", "location": "Wadala", "prediction": null, "decisionType": "ROUTE_RECOMMENDATION", "currentCondition": "MODERATE", "densityPrediction": null, "predictedCondition": null, "routeRecommendation": {"id": 0, "name": "Route A", "reason": "Lower predicted traffic impact from the supplied route conditions.", "source": "DEMONSTRATION", "affectedRoutes": []}}	RECOMMENDED	DEMONSTRATION	PENDING	2026-09-08 01:59:59.597551
+48	TrafficAgent	ROUTE_RECOMMENDATION	Wadala	Moderate	Recommend Route A	WHAT: Route A was evaluated against available route conditions. WHY: Lower predicted traffic impact from the supplied route conditions.. DECISION: Recommend Route A. EXPECTED RESULT: Lower predicted traffic impact for the journey.	{"signal": null, "source": "DEMONSTRATION", "status": "RECOMMENDED", "outcome": "PENDING", "location": "Wadala", "prediction": null, "decisionType": "ROUTE_RECOMMENDATION", "currentCondition": "MODERATE", "densityPrediction": null, "predictedCondition": null, "routeRecommendation": {"id": 0, "name": "Route A", "reason": "Lower predicted traffic impact from the supplied route conditions.", "source": "DEMONSTRATION", "affectedRoutes": []}}	RECOMMENDED	DEMONSTRATION	PENDING	2026-09-08 02:00:21.15971
+49	TrafficAgent	ROUTE_RECOMMENDATION	Dadar Junction	Moderate	Recommend Route A	WHAT: Route A was evaluated against available route conditions. WHY: Lower predicted traffic impact from the supplied route conditions.. DECISION: Recommend Route A. EXPECTED RESULT: Lower predicted traffic impact for the journey.	{"signal": null, "source": "DEMONSTRATION", "status": "RECOMMENDED", "outcome": "PENDING", "location": "Dadar Junction", "prediction": null, "decisionType": "ROUTE_RECOMMENDATION", "currentCondition": "MODERATE", "densityPrediction": null, "predictedCondition": null, "routeRecommendation": {"id": 0, "name": "Route A", "reason": "Lower predicted traffic impact from the supplied route conditions.", "source": "DEMONSTRATION", "affectedRoutes": []}}	RECOMMENDED	DEMONSTRATION	PENDING	2026-09-08 02:00:21.235201
+50	TrafficAgent	ROUTE_RECOMMENDATION	Dadar Junction	Moderate	Recommend Route A	WHAT: Route A was evaluated against available route conditions. WHY: Lower predicted traffic impact from the supplied route conditions.. DECISION: Recommend Route A. EXPECTED RESULT: Lower predicted traffic impact for the journey.	{"signal": null, "source": "DEMONSTRATION DATA", "status": "RECOMMENDED", "outcome": "PENDING", "location": "Dadar Junction", "prediction": null, "decisionType": "ROUTE_RECOMMENDATION", "currentCondition": "MODERATE", "densityPrediction": null, "predictedCondition": null, "routeRecommendation": {"id": 0, "name": "Route A", "reason": "Lower predicted traffic impact from the supplied route conditions.", "source": "DEMONSTRATION", "affectedRoutes": []}}	RECOMMENDED	DEMONSTRATION DATA	PENDING	2026-09-08 02:07:18.377752
+51	TrafficAgent	SIGNAL_OPTIMIZATION	Dadar Junction	SEVERE	Recommend GREEN +8s / RED -8s	WHAT: SEVERE traffic detected at Dadar Junction. WHY: Assessment combines SEVERE traffic inputs.. DECISION: Recommend GREEN +8s / RED -8s. EXPECTED RESULT: Reduce queue buildup on the affected approach while preserving the configured signal cycle.	{"signal": {"signalId": "af67a23b-986a-4372-a405-eaecf1f88565", "currentRed": 40, "currentGreen": 30, "optimizedRed": 32, "redAdjustment": -8, "optimizedGreen": 38, "greenAdjustment": 8, "affectedApproach": null}, "source": "DEMONSTRATION", "status": "SIMULATED", "outcome": "PENDING", "location": "Dadar Junction", "prediction": {"type": "CONGESTION", "reason": "Current conditions are expected to persist based on deterministic demonstration rules.", "source": "DEMONSTRATION", "confidence": 0.8, "currentState": "SEVERE", "horizonMinutes": 15, "predictedState": "SEVERE"}, "decisionType": "SIGNAL_OPTIMIZATION", "currentCondition": "SEVERE", "densityPrediction": {"type": "DENSITY", "reason": "Deterministic demonstration estimate based on density and signal demand.", "source": "DEMONSTRATION", "confidence": 0.75, "currentState": "SEVERE", "horizonMinutes": 20, "predictedState": "SEVERE"}, "predictedCondition": "SEVERE", "routeRecommendation": null}	SIMULATED	DEMONSTRATION	PENDING	2026-09-08 13:10:38.353198
+52	TrafficAgent	SIGNAL_OPTIMIZATION	Wadala Junction	SEVERE	Recommend GREEN +8s / RED -8s	WHAT: SEVERE traffic detected at Wadala Junction. WHY: Assessment combines SEVERE traffic inputs.. DECISION: Recommend GREEN +8s / RED -8s. EXPECTED RESULT: Reduce queue buildup on the affected approach while preserving the configured signal cycle.	{"signal": {"signalId": "978f1968-9211-4173-8c3f-02e5a7ef9742", "currentRed": 35, "currentGreen": 35, "optimizedRed": 27, "redAdjustment": -8, "optimizedGreen": 43, "greenAdjustment": 8, "affectedApproach": null}, "source": "DEMONSTRATION", "status": "SIMULATED", "outcome": "PENDING", "location": "Wadala Junction", "prediction": {"type": "CONGESTION", "reason": "Current conditions are expected to persist based on deterministic demonstration rules.", "source": "DEMONSTRATION", "confidence": 0.8, "currentState": "SEVERE", "horizonMinutes": 15, "predictedState": "SEVERE"}, "decisionType": "SIGNAL_OPTIMIZATION", "currentCondition": "SEVERE", "densityPrediction": {"type": "DENSITY", "reason": "Deterministic demonstration estimate based on density and signal demand.", "source": "DEMONSTRATION", "confidence": 0.75, "currentState": "SEVERE", "horizonMinutes": 20, "predictedState": "SEVERE"}, "predictedCondition": "SEVERE", "routeRecommendation": null}	SIMULATED	DEMONSTRATION	PENDING	2026-09-08 13:10:40.604383
+53	TrafficAgent	SIGNAL_OPTIMIZATION	Sion Circle	SEVERE	Recommend GREEN +8s / RED -8s	WHAT: SEVERE traffic detected at Sion Circle. WHY: Assessment combines SEVERE traffic inputs.. DECISION: Recommend GREEN +8s / RED -8s. EXPECTED RESULT: Reduce queue buildup on the affected approach while preserving the configured signal cycle.	{"signal": {"signalId": "f051e67e-a2ce-4d43-a2e2-d48bb87e01b3", "currentRed": 45, "currentGreen": 35, "optimizedRed": 37, "redAdjustment": -8, "optimizedGreen": 43, "greenAdjustment": 8, "affectedApproach": null}, "source": "DEMONSTRATION", "status": "SIMULATED", "outcome": "PENDING", "location": "Sion Circle", "prediction": {"type": "CONGESTION", "reason": "Current conditions are expected to persist based on deterministic demonstration rules.", "source": "DEMONSTRATION", "confidence": 0.8, "currentState": "SEVERE", "horizonMinutes": 15, "predictedState": "SEVERE"}, "decisionType": "SIGNAL_OPTIMIZATION", "currentCondition": "SEVERE", "densityPrediction": {"type": "DENSITY", "reason": "Deterministic demonstration estimate based on density and signal demand.", "source": "DEMONSTRATION", "confidence": 0.75, "currentState": "SEVERE", "horizonMinutes": 20, "predictedState": "SEVERE"}, "predictedCondition": "SEVERE", "routeRecommendation": null}	SIMULATED	DEMONSTRATION	PENDING	2026-09-08 13:10:42.771937
+54	TrafficAgent	SIGNAL_OPTIMIZATION	Bandra Junction	SEVERE	Recommend GREEN +8s / RED -8s	WHAT: SEVERE traffic detected at Bandra Junction. WHY: Assessment combines SEVERE traffic inputs.. DECISION: Recommend GREEN +8s / RED -8s. EXPECTED RESULT: Reduce queue buildup on the affected approach while preserving the configured signal cycle.	{"signal": {"signalId": "17a7ee5c-ab37-4fe4-b99e-013c4cea85d2", "currentRed": 45, "currentGreen": 45, "optimizedRed": 37, "redAdjustment": -8, "optimizedGreen": 53, "greenAdjustment": 8, "affectedApproach": null}, "source": "DEMONSTRATION", "status": "SIMULATED", "outcome": "PENDING", "location": "Bandra Junction", "prediction": {"type": "CONGESTION", "reason": "Current conditions are expected to persist based on deterministic demonstration rules.", "source": "DEMONSTRATION", "confidence": 0.8, "currentState": "SEVERE", "horizonMinutes": 15, "predictedState": "SEVERE"}, "decisionType": "SIGNAL_OPTIMIZATION", "currentCondition": "SEVERE", "densityPrediction": {"type": "DENSITY", "reason": "Deterministic demonstration estimate based on density and signal demand.", "source": "DEMONSTRATION", "confidence": 0.75, "currentState": "SEVERE", "horizonMinutes": 20, "predictedState": "SEVERE"}, "predictedCondition": "SEVERE", "routeRecommendation": null}	SIMULATED	DEMONSTRATION	PENDING	2026-09-08 13:10:46.428577
+55	TrafficAgent	SIGNAL_OPTIMIZATION	Matunga Junction	HIGH	Recommend GREEN +5s / RED -5s	WHAT: HIGH traffic detected at Matunga Junction. WHY: Assessment combines HIGH traffic inputs.. DECISION: Recommend GREEN +5s / RED -5s. EXPECTED RESULT: Reduce queue buildup on the affected approach while preserving the configured signal cycle.	{"signal": {"signalId": "786fd97f-5099-41b5-b5c9-d1fc89d1ed4e", "currentRed": 30, "currentGreen": 30, "optimizedRed": 25, "redAdjustment": -5, "optimizedGreen": 35, "greenAdjustment": 5, "affectedApproach": null}, "source": "DEMONSTRATION", "status": "SIMULATED", "outcome": "PENDING", "location": "Matunga Junction", "prediction": {"type": "CONGESTION", "reason": "Current conditions are expected to persist based on deterministic demonstration rules.", "source": "DEMONSTRATION", "confidence": 0.8, "currentState": "HIGH", "horizonMinutes": 15, "predictedState": "HIGH"}, "decisionType": "SIGNAL_OPTIMIZATION", "currentCondition": "HIGH", "densityPrediction": {"type": "DENSITY", "reason": "Deterministic demonstration estimate based on density and signal demand.", "source": "DEMONSTRATION", "confidence": 0.75, "currentState": "HIGH", "horizonMinutes": 20, "predictedState": "HIGH"}, "predictedCondition": "HIGH", "routeRecommendation": null}	SIMULATED	DEMONSTRATION	PENDING	2026-09-08 13:10:47.491947
+56	TrafficAgent	SIGNAL_OPTIMIZATION	Worli Junction	HIGH	Recommend GREEN +5s / RED -5s	WHAT: HIGH traffic detected at Worli Junction. WHY: Assessment combines HIGH traffic inputs.. DECISION: Recommend GREEN +5s / RED -5s. EXPECTED RESULT: Reduce queue buildup on the affected approach while preserving the configured signal cycle.	{"signal": {"signalId": "894ff76c-a263-4ed0-9c00-5a3060440eba", "currentRed": 35, "currentGreen": 35, "optimizedRed": 30, "redAdjustment": -5, "optimizedGreen": 40, "greenAdjustment": 5, "affectedApproach": null}, "source": "DEMONSTRATION", "status": "SIMULATED", "outcome": "PENDING", "location": "Worli Junction", "prediction": {"type": "CONGESTION", "reason": "Current conditions are expected to persist based on deterministic demonstration rules.", "source": "DEMONSTRATION", "confidence": 0.8, "currentState": "HIGH", "horizonMinutes": 15, "predictedState": "HIGH"}, "decisionType": "SIGNAL_OPTIMIZATION", "currentCondition": "HIGH", "densityPrediction": {"type": "DENSITY", "reason": "Deterministic demonstration estimate based on density and signal demand.", "source": "DEMONSTRATION", "confidence": 0.75, "currentState": "HIGH", "horizonMinutes": 20, "predictedState": "HIGH"}, "predictedCondition": "HIGH", "routeRecommendation": null}	SIMULATED	DEMONSTRATION	PENDING	2026-09-08 13:10:49.052049
+57	TrafficAgent	SIGNAL_OPTIMIZATION	BKC Junction	MODERATE	Maintain current signal timing	WHAT: MODERATE traffic detected at BKC Junction. WHY: Assessment combines MODERATE traffic inputs.. DECISION: Maintain current signal timing. EXPECTED RESULT: Reduce queue buildup on the affected approach while preserving the configured signal cycle.	{"signal": {"signalId": "9ea42355-89ca-46f0-b58b-6a37714d64fd", "currentRed": 20, "currentGreen": 40, "optimizedRed": 20, "redAdjustment": 0, "optimizedGreen": 40, "greenAdjustment": 0, "affectedApproach": null}, "source": "DEMONSTRATION", "status": "RECOMMENDED", "outcome": "PENDING", "location": "BKC Junction", "prediction": {"type": "CONGESTION", "reason": "Current conditions are expected to persist based on deterministic demonstration rules.", "source": "DEMONSTRATION", "confidence": 0.8, "currentState": "MODERATE", "horizonMinutes": 15, "predictedState": "MODERATE"}, "decisionType": "SIGNAL_OPTIMIZATION", "currentCondition": "MODERATE", "densityPrediction": {"type": "DENSITY", "reason": "Deterministic demonstration estimate based on density and signal demand.", "source": "DEMONSTRATION", "confidence": 0.75, "currentState": "MODERATE", "horizonMinutes": 20, "predictedState": "MODERATE"}, "predictedCondition": "MODERATE", "routeRecommendation": null}	RECOMMENDED	DEMONSTRATION	PENDING	2026-09-08 13:10:52.188714
+58	TrafficAgent	TRAFFIC_ANALYSIS	{"city":"Mumbai","name":"Dadar Junction","latitude":19.0189,"longitude":72.8437}	SEVERE	Monitor traffic condition	WHAT: SEVERE traffic detected at Dadar Junction. WHY: Assessment combines SEVERE, HIGH, HIGH, LOW, SEVERE traffic inputs.. DECISION: Monitor traffic condition. EXPECTED RESULT: Maintain the current signal plan while monitoring for a material change.	{"signal": {}, "source": "DEMONSTRATION", "status": "INSUFFICIENT_DATA", "outcome": "PENDING", "location": {"city": "Mumbai", "name": "Dadar Junction", "latitude": 19.0189, "longitude": 72.8437}, "prediction": {"type": "CONGESTION", "reason": "Sustained demand may increase congestion based on deterministic demonstration rules.", "source": "DEMONSTRATION", "confidence": 0.8, "currentState": "SEVERE", "horizonMinutes": 15, "predictedState": "CRITICAL"}, "decisionType": "TRAFFIC_ANALYSIS", "currentCondition": "SEVERE", "densityPrediction": {"type": "DENSITY", "reason": "Deterministic demonstration estimate based on density and signal demand.", "source": "DEMONSTRATION", "confidence": 0.75, "currentState": "HIGH", "horizonMinutes": 20, "predictedState": "CRITICAL"}, "predictedCondition": "CRITICAL", "routeRecommendation": null}	INSUFFICIENT_DATA	DEMONSTRATION	PENDING	2026-09-08 13:19:38.346145
+59	TrafficAgent	ROUTE_RECOMMENDATION	Dadar Junction	Moderate	Recommend Route A	WHAT: Route A was evaluated against available route conditions. WHY: Lower predicted traffic impact from the supplied route conditions.. DECISION: Recommend Route A. EXPECTED RESULT: Lower predicted traffic impact for the journey.	{"signal": null, "source": "DEMONSTRATION", "status": "RECOMMENDED", "outcome": "PENDING", "location": "Dadar Junction", "prediction": null, "decisionType": "ROUTE_RECOMMENDATION", "currentCondition": "MODERATE", "densityPrediction": null, "predictedCondition": null, "routeRecommendation": {"id": 0, "name": "Route A", "reason": "Lower predicted traffic impact from the supplied route conditions.", "source": "DEMONSTRATION", "affectedRoutes": []}}	RECOMMENDED	DEMONSTRATION	PENDING	2026-09-08 13:19:49.470901
+60	TrafficAgent	ROUTE_RECOMMENDATION	Dadar Station, Mumbai	Moderate	Recommend Route A	WHAT: Route A was evaluated against available route conditions. WHY: Lower predicted traffic impact from the supplied route conditions.. DECISION: Recommend Route A. EXPECTED RESULT: Lower predicted traffic impact for the journey.	{"signal": null, "source": "DEMONSTRATION", "status": "RECOMMENDED", "outcome": "PENDING", "location": "Dadar Station, Mumbai", "prediction": null, "decisionType": "ROUTE_RECOMMENDATION", "currentCondition": "MODERATE", "densityPrediction": null, "predictedCondition": null, "routeRecommendation": {"id": 0, "name": "Route A", "reason": "Lower predicted traffic impact from the supplied route conditions.", "source": "DEMONSTRATION", "affectedRoutes": []}}	RECOMMENDED	DEMONSTRATION	PENDING	2026-09-08 13:28:26.288465
+\.
+
+
+--
+-- TOC entry 5160 (class 0 OID 34041)
+-- Dependencies: 241
+-- Data for Name: traffic_demo_scenarios; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY public.traffic_demo_scenarios (id, name, type, location, latitude, longitude, severity, description, traffic_level, density_level, flow_level, affected_approach, source, is_demo, event_data, created_at, updated_at) FROM stdin;
+1	Dadar Peak Congestion	TRAFFIC_CONGESTION	Dadar Junction	19.0189000	72.8437000	SEVERE	During evening peak hours, traffic demand increases at Dadar Junction. The Traffic Agent detects deteriorating traffic conditions, forecasts further congestion, evaluates signal timing, and recommends a lower-impact route toward Wadala.	SEVERE	HIGH	HIGH	Dadar → Wadala	DEMONSTRATION	t	{"type": "TRAFFIC_CONDITION", "routes": [{"id": "dadar-wadala-main", "name": "Dadar–Wadala Main Road", "impact": "HIGH", "recommended": false, "trafficLevel": "SEVERE", "predictedTrafficLevel": "CRITICAL"}, {"id": "dadar-matunga-link", "name": "Matunga Link Road", "impact": "LOW", "recommended": true, "trafficLevel": "HIGH", "predictedTrafficLevel": "HIGH"}], "signal": {"reason": "High traffic demand on the Dadar to Wadala approach.", "status": "SIMULATED", "current": {"red": 48, "green": 42}, "signalId": "DADAR-WADALA-01", "cycleTime": 90, "adjustment": {"red": -8, "green": 8}, "recommended": {"red": 40, "green": 50}, "intersection": "Dadar Junction"}, "location": {"city": "Mumbai", "name": "Dadar Junction", "latitude": 19.0189, "longitude": 72.8437}, "metadata": {"source": "DEMONSTRATION", "flowLevel": "HIGH", "densityLevel": "HIGH", "signalDemand": "SEVERE", "trafficLevel": "SEVERE", "roadCondition": "NORMAL", "affectedApproach": "Dadar → Wadala"}, "severity": "SEVERE", "agentPlan": {"actions": ["ANALYZE_TRAFFIC", "PREDICT_CONGESTION", "OPTIMIZE_SIGNAL", "EVALUATE_ROUTES", "GENERATE_RECOMMENDATION"], "primaryAgent": "TrafficAgent", "primaryAction": "SIGNAL_OPTIMIZATION", "affectedAgents": ["TrafficAgent"]}, "demoConfig": {"autoRoute": true, "autoAnalyze": true, "defaultOrigin": "Dadar Station, Mumbai", "showAgentLogs": true, "showPrediction": true, "showTrafficLayer": true, "defaultDestination": "Wadala, Mumbai", "showSignalOptimization": true}, "prediction": {"type": "CONGESTION", "source": "DEMONSTRATION", "currentState": "SEVERE", "horizonMinutes": 15, "predictedState": "CRITICAL"}, "scenarioSteps": [{"step": 1, "type": "DETECT", "message": "Severe traffic conditions detected at Dadar Junction."}, {"step": 2, "type": "ANALYZE", "message": "Traffic Agent is analyzing demand on the Dadar to Wadala approach."}, {"step": 3, "type": "PREDICT", "message": "Further congestion is expected within the next 15 minutes."}, {"step": 4, "type": "SIGNAL_OPTIMIZATION", "message": "Traffic Agent recommends increasing the green phase by 8 seconds."}, {"step": 5, "type": "ROUTE_EVALUATION", "message": "Alternative routes toward Wadala are being evaluated."}, {"step": 6, "type": "DECISION", "message": "Matunga Link Road is recommended as the lower-impact alternative."}], "expectedOutcome": {"status": "SIMULATED", "redAfter": 40, "redBefore": 48, "greenAfter": 50, "greenBefore": 42, "trafficAfter": "IMPROVING", "trafficBefore": "SEVERE", "routeRecommendation": "Matunga Link Road"}, "scenarioVersion": "2.0", "densityPrediction": {"source": "DEMONSTRATION", "currentState": "HIGH", "horizonMinutes": 20, "predictedState": "VERY_HIGH"}}	2026-09-01 21:39:50.36267	2026-09-01 23:04:01.292935
+2	Dadar Accident Route Diversion	ACCIDENT_DETECTED	Dadar–Wadala corridor	19.0231000	72.8534000	HIGH	A simulated road collision partially blocks the Dadar–Wadala corridor. The Traffic Agent evaluates the affected road, predicts secondary congestion, recommends a diversion, and coordinates simulated traffic management.	HIGH	HIGH	MODERATE	Dadar → Wadala	DEMONSTRATION	t	{"type": "ACCIDENT_DETECTED", "routes": [{"id": "accident-main", "name": "Dadar–Wadala Main Road", "impact": "CRITICAL", "roadClosed": false, "recommended": false, "trafficLevel": "SEVERE", "incidentImpact": true, "predictedTrafficLevel": "CRITICAL"}, {"id": "accident-alt", "name": "Matunga Link Road", "impact": "MODERATE", "roadClosed": false, "recommended": true, "trafficLevel": "HIGH", "incidentImpact": false, "predictedTrafficLevel": "HIGH"}], "signal": {"reason": "Reduce inflow toward the partially blocked corridor.", "status": "SIMULATED", "current": {"red": 50, "green": 40}, "signalId": "DADAR-WADALA-01", "cycleTime": 90, "recommended": {"red": 56, "green": 34}, "intersection": "Dadar Junction"}, "incident": {"injuries": "SIMULATED_UNKNOWN", "roadBlocked": true, "incidentType": "ROAD_ACCIDENT", "lanesAffected": 1, "vehiclesInvolved": 2}, "location": {"city": "Mumbai", "name": "Dadar–Wadala corridor", "latitude": 19.0231, "longitude": 72.8534}, "metadata": {"source": "DEMONSTRATION", "flowLevel": "MODERATE", "densityLevel": "HIGH", "signalDemand": "HIGH", "trafficLevel": "HIGH", "roadCondition": "PARTIALLY_BLOCKED", "affectedApproach": "Dadar → Wadala"}, "severity": "HIGH", "agentPlan": {"actions": ["ASSESS_ACCIDENT", "IDENTIFY_AFFECTED_CORRIDOR", "PREDICT_SECONDARY_CONGESTION", "EVALUATE_ROUTES", "OPTIMIZE_SIGNAL", "GENERATE_DIVERSION"], "primaryAgent": "TrafficAgent", "primaryAction": "ROUTE_DIVERSION", "affectedAgents": ["TrafficAgent", "PoliceAgent"]}, "demoConfig": {"autoRoute": true, "autoAnalyze": true, "showIncident": true, "defaultOrigin": "Dadar Station, Mumbai", "showAgentLogs": true, "showTrafficLayer": true, "defaultDestination": "Wadala, Mumbai", "showSignalOptimization": true}, "prediction": {"type": "SECONDARY_CONGESTION", "source": "DEMONSTRATION", "currentState": "HIGH", "horizonMinutes": 10, "predictedState": "SEVERE"}, "scenarioSteps": [{"step": 1, "type": "DETECT", "message": "Road accident detected on the Dadar–Wadala corridor."}, {"step": 2, "type": "IMPACT_ANALYSIS", "message": "Traffic Agent is assessing the blocked lane and downstream impact."}, {"step": 3, "type": "PREDICT", "message": "Secondary congestion is expected to increase around the affected corridor."}, {"step": 4, "type": "ROUTE_EVALUATION", "message": "Alternative routes are being evaluated."}, {"step": 5, "type": "SIGNAL_OPTIMIZATION", "message": "Signal timing adjustment is recommended to reduce additional inflow."}, {"step": 6, "type": "DECISION", "message": "Traffic is recommended to divert toward Matunga Link Road."}], "expectedOutcome": {"status": "SIMULATED", "affectedRoute": "Dadar–Wadala Main Road", "recommendedRoute": "Matunga Link Road", "signalAdjustment": "Reduce inflow toward affected corridor"}, "scenarioVersion": "2.0"}	2026-09-01 21:39:50.36267	2026-09-01 23:04:01.292935
+4	Wadala Road Closure	ROAD_CLOSURE	Wadala	19.0176000	72.8580000	HIGH	A simulated road closure makes a key Wadala road unavailable. The Traffic Agent identifies the affected corridor, evaluates alternatives, and recommends a diversion.	HIGH	HIGH	LOW	Wadala Junction	DEMONSTRATION	t	{"type": "ROAD_CLOSURE", "routes": [{"id": "wadala-closed", "name": "Wadala Main Road", "impact": "CRITICAL", "roadClosed": true, "recommended": false, "trafficLevel": "CRITICAL", "predictedTrafficLevel": "CRITICAL"}, {"id": "wadala-alt", "name": "Sion–Matunga Link", "impact": "LOW", "roadClosed": false, "recommended": true, "trafficLevel": "MODERATE", "predictedTrafficLevel": "HIGH"}], "location": {"city": "Mumbai", "name": "Wadala", "latitude": 19.0176, "longitude": 72.8580}, "metadata": {"source": "DEMONSTRATION", "flowLevel": "LOW", "roadClosed": true, "densityLevel": "HIGH", "trafficLevel": "HIGH", "roadCondition": "CLOSED", "affectedApproach": "Wadala Junction"}, "severity": "HIGH", "agentPlan": {"actions": ["DETECT_CLOSURE", "IDENTIFY_AFFECTED_ROAD", "EVALUATE_ALTERNATIVES", "RECOMMEND_DIVERSION"], "primaryAgent": "TrafficAgent", "primaryAction": "ROAD_DIVERSION", "affectedAgents": ["TrafficAgent", "CitizenAgent"]}, "demoConfig": {"autoRoute": true, "autoAnalyze": true, "defaultOrigin": "Dadar Station, Mumbai", "showAgentLogs": true, "showRoadClosure": true, "defaultDestination": "Wadala, Mumbai", "showRouteDiversion": true}, "roadClosure": {"road": "Wadala Main Road", "reason": "Infrastructure maintenance demonstration", "status": "SIMULATED_CLOSED", "estimatedDurationMinutes": 45}, "scenarioSteps": [{"step": 1, "type": "DETECT", "message": "Road closure detected in the Wadala corridor."}, {"step": 2, "type": "IMPACT_ANALYSIS", "message": "Traffic Agent identified the primary route as unavailable."}, {"step": 3, "type": "ROUTE_EVALUATION", "message": "Alternative routes are being evaluated."}, {"step": 4, "type": "DECISION", "message": "Sion–Matunga Link is recommended as the alternative route."}], "expectedOutcome": {"status": "SIMULATED", "closedRoad": "Wadala Main Road", "recommendedRoute": "Sion–Matunga Link"}, "scenarioVersion": "2.0"}	2026-09-01 21:39:50.36267	2026-09-01 23:04:01.292935
+3	Ambulance Green Corridor	EMERGENCY_ROUTE	Dadar → Sion → KEM Hospital	19.0208000	72.8509000	CRITICAL	A simulated emergency ambulance route is requested from Dadar toward KEM Hospital. The Traffic Agent evaluates the corridor and generates simulated signal-priority recommendations at key intersections.	HIGH	HIGH	HIGH	Dadar → Sion → KEM Hospital	DEMONSTRATION	t	{"type": "EMERGENCY_ROUTE", "route": {"name": "Dadar → Sion → KEM Hospital", "waypoints": [{"name": "Dadar Junction", "latitude": 19.0189, "longitude": 72.8437}, {"name": "Sion Circle", "latitude": 19.0460, "longitude": 72.8620}, {"name": "KEM Hospital", "latitude": 19.0015, "longitude": 72.8420}]}, "location": {"city": "Mumbai", "name": "Dadar → Sion → KEM Hospital"}, "metadata": {"source": "DEMONSTRATION", "flowLevel": "HIGH", "simulation": true, "densityLevel": "HIGH", "trafficLevel": "HIGH", "affectedApproach": "Dadar → Sion → KEM Hospital"}, "severity": "CRITICAL", "agentPlan": {"actions": ["RECEIVE_EMERGENCY_REQUEST", "EVALUATE_ROUTE", "IDENTIFY_INTERSECTIONS", "GENERATE_SIGNAL_PRIORITY", "MONITOR_CORRIDOR"], "primaryAgent": "TrafficAgent", "primaryAction": "EMERGENCY_PRIORITY", "affectedAgents": ["TrafficAgent", "HospitalAgent"]}, "emergency": {"type": "AMBULANCE", "origin": "Dadar Station, Mumbai", "priority": "CRITICAL", "vehicleId": "AMB-DEMO-104", "destination": "KEM Hospital, Mumbai"}, "demoConfig": {"autoRoute": true, "autoAnalyze": true, "defaultOrigin": "Dadar Station, Mumbai", "showAgentLogs": true, "defaultDestination": "KEM Hospital, Mumbai", "showEmergencyRoute": true, "showSignalPriority": true}, "intersections": [{"name": "Dadar Junction", "priority": "SIMULATED", "signalId": "DADAR-EMERGENCY-01"}, {"name": "Sion Circle", "priority": "SIMULATED", "signalId": "SION-EMERGENCY-01"}], "scenarioSteps": [{"step": 1, "type": "EMERGENCY", "message": "Emergency ambulance priority request received."}, {"step": 2, "type": "ROUTE", "message": "Traffic Agent is evaluating the Dadar to KEM Hospital corridor."}, {"step": 3, "type": "INTERSECTION_ANALYSIS", "message": "Key intersections along the emergency corridor identified."}, {"step": 4, "type": "SIGNAL_PRIORITY", "message": "Simulated signal-priority recommendations generated."}, {"step": 5, "type": "CORRIDOR", "message": "Green corridor coordination is active in simulation mode."}], "expectedOutcome": {"status": "SIMULATED", "priority": "EMERGENCY", "corridorStatus": "SIMULATED_ACTIVE", "intersectionsOptimized": 2}, "scenarioVersion": "2.0"}	2026-09-01 21:39:50.36267	2026-09-01 23:04:01.292935
+5	BKC Event Traffic Surge	TRAFFIC_PREDICTION	BKC	19.0609000	72.8686000	HIGH	A simulated major event in BKC is expected to increase traffic demand. The Traffic Agent forecasts congestion and generates proactive signal and route recommendations before conditions become critical.	HIGH	HIGH	HIGH	BKC entry corridors	DEMONSTRATION	t	{"type": "TRAFFIC_PREDICTION", "event": {"type": "LARGE_EVENT", "location": "BKC", "expectedDemand": "HIGH", "planningHorizonMinutes": 30}, "routes": [{"id": "bkc-west", "name": "Bandra–Kurla Connector", "impact": "HIGH", "recommended": false, "trafficLevel": "HIGH", "predictedTrafficLevel": "SEVERE"}, {"id": "bkc-east", "name": "Sion–Dharavi Link", "impact": "MODERATE", "recommended": true, "trafficLevel": "MODERATE", "predictedTrafficLevel": "HIGH"}], "signal": {"reason": "Expected increase in event-related traffic demand.", "status": "SIMULATED", "current": {"red": 45, "green": 45}, "signalId": "BKC-EAST-01", "cycleTime": 90, "adjustment": {"red": -8, "green": 8}, "recommended": {"red": 37, "green": 53}, "intersection": "BKC Entry"}, "location": {"city": "Mumbai", "name": "BKC", "latitude": 19.0609, "longitude": 72.8686}, "metadata": {"source": "DEMONSTRATION", "flowLevel": "HIGH", "densityLevel": "HIGH", "signalDemand": "HIGH", "trafficLevel": "HIGH", "affectedApproach": "BKC entry corridors"}, "severity": "HIGH", "agentPlan": {"actions": ["ANALYZE_EVENT_DEMAND", "PREDICT_CONGESTION", "OPTIMIZE_SIGNAL", "EVALUATE_ROUTES", "GENERATE_PREVENTIVE_RECOMMENDATION"], "primaryAgent": "TrafficAgent", "primaryAction": "PROACTIVE_OPTIMIZATION", "affectedAgents": ["TrafficAgent", "CitizenAgent"]}, "demoConfig": {"autoRoute": true, "autoAnalyze": true, "defaultOrigin": "Bandra, Mumbai", "showAgentLogs": true, "showPrediction": true, "defaultDestination": "BKC, Mumbai", "showSignalOptimization": true}, "prediction": {"type": "TRAFFIC_SURGE", "source": "DEMONSTRATION", "currentState": "HIGH", "horizonMinutes": 30, "predictedState": "SEVERE"}, "scenarioSteps": [{"step": 1, "type": "PREDICTION", "message": "Increased traffic demand is expected around BKC."}, {"step": 2, "type": "ANALYZE", "message": "Traffic Agent is analyzing expected event-related demand."}, {"step": 3, "type": "PREDICT", "message": "Traffic is predicted to reach severe levels within 30 minutes."}, {"step": 4, "type": "SIGNAL_OPTIMIZATION", "message": "Proactive green-phase extension is recommended."}, {"step": 5, "type": "ROUTE_EVALUATION", "message": "Alternative entry corridors are being evaluated."}, {"step": 6, "type": "DECISION", "message": "Sion–Dharavi Link is recommended to distribute traffic demand."}], "expectedOutcome": {"status": "SIMULATED", "trafficBefore": "HIGH", "predictedTraffic": "SEVERE", "recommendedRoute": "Sion–Dharavi Link", "signalAdjustment": "+8 seconds green"}, "scenarioVersion": "2.0", "densityPrediction": {"source": "DEMONSTRATION", "currentState": "HIGH", "horizonMinutes": 30, "predictedState": "VERY_HIGH"}}	2026-09-01 21:39:50.36267	2026-09-01 23:04:01.292935
+6	Monsoon Waterlogging	FLOOD	Sion / Wadala	19.0351000	72.8629000	HIGH	Simulated monsoon waterlogging affects a low-lying road between Sion and Wadala. The Traffic Agent identifies the unsafe corridor, recommends restricting the route, and evaluates an alternative diversion.	HIGH	HIGH	LOW	Sion / Wadala low-lying approach	DEMONSTRATION	t	{"type": "FLOOD", "routes": [{"id": "flooded-road", "name": "Sion–Wadala low-lying road", "impact": "CRITICAL", "roadClosed": true, "recommended": false, "trafficLevel": "CRITICAL", "predictedTrafficLevel": "CRITICAL"}, {"id": "flood-alt", "name": "Matunga diversion", "impact": "MODERATE", "roadClosed": false, "recommended": true, "trafficLevel": "MODERATE", "predictedTrafficLevel": "HIGH"}], "location": {"city": "Mumbai", "name": "Sion / Wadala", "latitude": 19.0351, "longitude": 72.8629}, "metadata": {"source": "DEMONSTRATION", "flowLevel": "LOW", "densityLevel": "HIGH", "trafficLevel": "HIGH", "roadCondition": "POOR", "affectedApproach": "Sion / Wadala low-lying approach"}, "severity": "HIGH", "agentPlan": {"actions": ["ASSESS_ROAD_CONDITION", "IDENTIFY_UNSAFE_CORRIDOR", "RESTRICT_ROUTE", "EVALUATE_ALTERNATIVES", "RECOMMEND_DIVERSION"], "primaryAgent": "TrafficAgent", "primaryAction": "ROAD_RESTRICTION_AND_DIVERSION", "affectedAgents": ["TrafficAgent", "CitizenAgent", "EnvironmentalAgent"]}, "demoConfig": {"autoRoute": true, "autoAnalyze": true, "defaultOrigin": "Sion, Mumbai", "showAgentLogs": true, "defaultDestination": "Wadala, Mumbai", "showRouteDiversion": true, "showRoadRestriction": true}, "environment": {"condition": "HEAVY_RAIN", "roadSafety": "DEGRADED", "waterlogging": true}, "scenarioSteps": [{"step": 1, "type": "DETECT", "message": "Waterlogging detected on the Sion–Wadala low-lying approach."}, {"step": 2, "type": "ASSESS", "message": "Traffic Agent is assessing road safety and traffic impact."}, {"step": 3, "type": "RESTRICTION", "message": "Simulated route restriction recommended for the affected road."}, {"step": 4, "type": "ROUTE_EVALUATION", "message": "Alternative routes are being evaluated."}, {"step": 5, "type": "DECISION", "message": "Matunga diversion is recommended."}], "expectedOutcome": {"status": "SIMULATED", "restrictedRoad": "Sion–Wadala low-lying road", "recommendedRoute": "Matunga diversion"}, "roadRestriction": {"road": "Sion–Wadala low-lying road", "reason": "Waterlogging", "status": "SIMULATED_RESTRICTION", "estimatedDurationMinutes": 60}, "scenarioVersion": "2.0"}	2026-09-01 21:39:50.36267	2026-09-01 23:04:01.292935
+\.
+
+
+--
+-- TOC entry 5139 (class 0 OID 25420)
 -- Dependencies: 220
 -- Data for Name: users; Type: TABLE DATA; Schema: public; Owner: postgres
 --
@@ -1244,7 +1447,7 @@ COPY public.users (id, username, password_hash, role, created_at) FROM stdin;
 
 
 --
--- TOC entry 5114 (class 0 OID 25619)
+-- TOC entry 5145 (class 0 OID 25619)
 -- Dependencies: 226
 -- Data for Name: vehicles; Type: TABLE DATA; Schema: public; Owner: postgres
 --
@@ -1254,7 +1457,7 @@ COPY public.vehicles (vehicle_id, vehicle_type, department, current_lat, current
 
 
 --
--- TOC entry 5158 (class 0 OID 0)
+-- TOC entry 5199 (class 0 OID 0)
 -- Dependencies: 230
 -- Name: live_detection_results_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
@@ -1263,7 +1466,7 @@ SELECT pg_catalog.setval('public.live_detection_results_id_seq', 1, false);
 
 
 --
--- TOC entry 5159 (class 0 OID 0)
+-- TOC entry 5200 (class 0 OID 0)
 -- Dependencies: 232
 -- Name: live_event_timeline_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
@@ -1272,7 +1475,7 @@ SELECT pg_catalog.setval('public.live_event_timeline_id_seq', 1, true);
 
 
 --
--- TOC entry 5160 (class 0 OID 0)
+-- TOC entry 5201 (class 0 OID 0)
 -- Dependencies: 236
 -- Name: live_processing_logs_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
@@ -1281,7 +1484,7 @@ SELECT pg_catalog.setval('public.live_processing_logs_id_seq', 1, false);
 
 
 --
--- TOC entry 5161 (class 0 OID 0)
+-- TOC entry 5202 (class 0 OID 0)
 -- Dependencies: 234
 -- Name: live_tracking_results_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
@@ -1290,7 +1493,7 @@ SELECT pg_catalog.setval('public.live_tracking_results_id_seq', 1, false);
 
 
 --
--- TOC entry 5162 (class 0 OID 0)
+-- TOC entry 5203 (class 0 OID 0)
 -- Dependencies: 228
 -- Name: live_video_uploads_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
@@ -1299,7 +1502,7 @@ SELECT pg_catalog.setval('public.live_video_uploads_id_seq', 2, true);
 
 
 --
--- TOC entry 5163 (class 0 OID 0)
+-- TOC entry 5204 (class 0 OID 0)
 -- Dependencies: 221
 -- Name: scenarios_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
@@ -1308,7 +1511,7 @@ SELECT pg_catalog.setval('public.scenarios_id_seq', 7, true);
 
 
 --
--- TOC entry 5164 (class 0 OID 0)
+-- TOC entry 5205 (class 0 OID 0)
 -- Dependencies: 223
 -- Name: timeline_events_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
@@ -1317,7 +1520,25 @@ SELECT pg_catalog.setval('public.timeline_events_id_seq', 30, true);
 
 
 --
--- TOC entry 5165 (class 0 OID 0)
+-- TOC entry 5206 (class 0 OID 0)
+-- Dependencies: 238
+-- Name: traffic_decisions_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.traffic_decisions_id_seq', 60, true);
+
+
+--
+-- TOC entry 5207 (class 0 OID 0)
+-- Dependencies: 240
+-- Name: traffic_demo_scenarios_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.traffic_demo_scenarios_id_seq', 6, true);
+
+
+--
+-- TOC entry 5208 (class 0 OID 0)
 -- Dependencies: 219
 -- Name: users_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
@@ -1326,7 +1547,7 @@ SELECT pg_catalog.setval('public.users_id_seq', 8, true);
 
 
 --
--- TOC entry 4942 (class 2606 OID 25649)
+-- TOC entry 4964 (class 2606 OID 25649)
 -- Name: incidents incidents_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -1335,7 +1556,7 @@ ALTER TABLE ONLY public.incidents
 
 
 --
--- TOC entry 4947 (class 2606 OID 25692)
+-- TOC entry 4969 (class 2606 OID 25692)
 -- Name: live_detection_results live_detection_results_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -1344,7 +1565,7 @@ ALTER TABLE ONLY public.live_detection_results
 
 
 --
--- TOC entry 4949 (class 2606 OID 25711)
+-- TOC entry 4971 (class 2606 OID 25711)
 -- Name: live_event_timeline live_event_timeline_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -1353,7 +1574,7 @@ ALTER TABLE ONLY public.live_event_timeline
 
 
 --
--- TOC entry 4953 (class 2606 OID 25746)
+-- TOC entry 4975 (class 2606 OID 25746)
 -- Name: live_processing_logs live_processing_logs_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -1362,7 +1583,7 @@ ALTER TABLE ONLY public.live_processing_logs
 
 
 --
--- TOC entry 4951 (class 2606 OID 25728)
+-- TOC entry 4973 (class 2606 OID 25728)
 -- Name: live_tracking_results live_tracking_results_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -1371,7 +1592,7 @@ ALTER TABLE ONLY public.live_tracking_results
 
 
 --
--- TOC entry 4945 (class 2606 OID 25678)
+-- TOC entry 4967 (class 2606 OID 25678)
 -- Name: live_video_uploads live_video_uploads_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -1380,7 +1601,7 @@ ALTER TABLE ONLY public.live_video_uploads
 
 
 --
--- TOC entry 4938 (class 2606 OID 25618)
+-- TOC entry 4960 (class 2606 OID 25618)
 -- Name: map_entities map_entities_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -1389,7 +1610,7 @@ ALTER TABLE ONLY public.map_entities
 
 
 --
--- TOC entry 4933 (class 2606 OID 25446)
+-- TOC entry 4955 (class 2606 OID 25446)
 -- Name: scenarios scenarios_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -1398,7 +1619,7 @@ ALTER TABLE ONLY public.scenarios
 
 
 --
--- TOC entry 4936 (class 2606 OID 25460)
+-- TOC entry 4958 (class 2606 OID 25460)
 -- Name: timeline_events timeline_events_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -1407,7 +1628,34 @@ ALTER TABLE ONLY public.timeline_events
 
 
 --
--- TOC entry 4929 (class 2606 OID 25431)
+-- TOC entry 4979 (class 2606 OID 34037)
+-- Name: traffic_decisions traffic_decisions_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.traffic_decisions
+    ADD CONSTRAINT traffic_decisions_pkey PRIMARY KEY (id);
+
+
+--
+-- TOC entry 4982 (class 2606 OID 34069)
+-- Name: traffic_demo_scenarios traffic_demo_scenarios_name_key; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.traffic_demo_scenarios
+    ADD CONSTRAINT traffic_demo_scenarios_name_key UNIQUE (name);
+
+
+--
+-- TOC entry 4984 (class 2606 OID 34067)
+-- Name: traffic_demo_scenarios traffic_demo_scenarios_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.traffic_demo_scenarios
+    ADD CONSTRAINT traffic_demo_scenarios_pkey PRIMARY KEY (id);
+
+
+--
+-- TOC entry 4951 (class 2606 OID 25431)
 -- Name: users users_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -1416,7 +1664,7 @@ ALTER TABLE ONLY public.users
 
 
 --
--- TOC entry 4931 (class 2606 OID 25433)
+-- TOC entry 4953 (class 2606 OID 25433)
 -- Name: users users_username_key; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -1425,7 +1673,7 @@ ALTER TABLE ONLY public.users
 
 
 --
--- TOC entry 4940 (class 2606 OID 25634)
+-- TOC entry 4962 (class 2606 OID 25634)
 -- Name: vehicles vehicles_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -1434,7 +1682,7 @@ ALTER TABLE ONLY public.vehicles
 
 
 --
--- TOC entry 4943 (class 1259 OID 33861)
+-- TOC entry 4965 (class 1259 OID 33861)
 -- Name: idx_live_video_uploads_video_hash; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -1442,7 +1690,7 @@ CREATE INDEX idx_live_video_uploads_video_hash ON public.live_video_uploads USIN
 
 
 --
--- TOC entry 4934 (class 1259 OID 25466)
+-- TOC entry 4956 (class 1259 OID 25466)
 -- Name: idx_timeline_events_timestamp; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -1450,7 +1698,31 @@ CREATE INDEX idx_timeline_events_timestamp ON public.timeline_events USING btree
 
 
 --
--- TOC entry 4955 (class 2606 OID 33862)
+-- TOC entry 4976 (class 1259 OID 34038)
+-- Name: idx_traffic_decisions_created_at; Type: INDEX; Schema: public; Owner: postgres
+--
+
+CREATE INDEX idx_traffic_decisions_created_at ON public.traffic_decisions USING btree (created_at DESC);
+
+
+--
+-- TOC entry 4977 (class 1259 OID 34039)
+-- Name: idx_traffic_decisions_type; Type: INDEX; Schema: public; Owner: postgres
+--
+
+CREATE INDEX idx_traffic_decisions_type ON public.traffic_decisions USING btree (decision_type);
+
+
+--
+-- TOC entry 4980 (class 1259 OID 34070)
+-- Name: idx_traffic_demo_scenarios_demo; Type: INDEX; Schema: public; Owner: postgres
+--
+
+CREATE INDEX idx_traffic_demo_scenarios_demo ON public.traffic_demo_scenarios USING btree (is_demo, name);
+
+
+--
+-- TOC entry 4986 (class 2606 OID 33862)
 -- Name: incidents incidents_upload_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -1459,7 +1731,7 @@ ALTER TABLE ONLY public.incidents
 
 
 --
--- TOC entry 4956 (class 2606 OID 25693)
+-- TOC entry 4987 (class 2606 OID 25693)
 -- Name: live_detection_results live_detection_results_upload_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -1468,7 +1740,7 @@ ALTER TABLE ONLY public.live_detection_results
 
 
 --
--- TOC entry 4957 (class 2606 OID 25712)
+-- TOC entry 4988 (class 2606 OID 25712)
 -- Name: live_event_timeline live_event_timeline_upload_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -1477,7 +1749,7 @@ ALTER TABLE ONLY public.live_event_timeline
 
 
 --
--- TOC entry 4959 (class 2606 OID 25747)
+-- TOC entry 4990 (class 2606 OID 25747)
 -- Name: live_processing_logs live_processing_logs_upload_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -1486,7 +1758,7 @@ ALTER TABLE ONLY public.live_processing_logs
 
 
 --
--- TOC entry 4958 (class 2606 OID 25729)
+-- TOC entry 4989 (class 2606 OID 25729)
 -- Name: live_tracking_results live_tracking_results_upload_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -1495,7 +1767,7 @@ ALTER TABLE ONLY public.live_tracking_results
 
 
 --
--- TOC entry 4954 (class 2606 OID 25461)
+-- TOC entry 4985 (class 2606 OID 25461)
 -- Name: timeline_events timeline_events_scenario_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -1504,7 +1776,7 @@ ALTER TABLE ONLY public.timeline_events
 
 
 --
--- TOC entry 5131 (class 0 OID 0)
+-- TOC entry 5166 (class 0 OID 0)
 -- Dependencies: 227
 -- Name: TABLE incidents; Type: ACL; Schema: public; Owner: postgres
 --
@@ -1513,7 +1785,7 @@ GRANT ALL ON TABLE public.incidents TO smart_city_user;
 
 
 --
--- TOC entry 5132 (class 0 OID 0)
+-- TOC entry 5167 (class 0 OID 0)
 -- Dependencies: 231
 -- Name: TABLE live_detection_results; Type: ACL; Schema: public; Owner: postgres
 --
@@ -1522,7 +1794,7 @@ GRANT ALL ON TABLE public.live_detection_results TO smart_city_user;
 
 
 --
--- TOC entry 5134 (class 0 OID 0)
+-- TOC entry 5169 (class 0 OID 0)
 -- Dependencies: 230
 -- Name: SEQUENCE live_detection_results_id_seq; Type: ACL; Schema: public; Owner: postgres
 --
@@ -1531,7 +1803,7 @@ GRANT ALL ON SEQUENCE public.live_detection_results_id_seq TO smart_city_user;
 
 
 --
--- TOC entry 5135 (class 0 OID 0)
+-- TOC entry 5170 (class 0 OID 0)
 -- Dependencies: 233
 -- Name: TABLE live_event_timeline; Type: ACL; Schema: public; Owner: postgres
 --
@@ -1540,7 +1812,7 @@ GRANT ALL ON TABLE public.live_event_timeline TO smart_city_user;
 
 
 --
--- TOC entry 5137 (class 0 OID 0)
+-- TOC entry 5172 (class 0 OID 0)
 -- Dependencies: 232
 -- Name: SEQUENCE live_event_timeline_id_seq; Type: ACL; Schema: public; Owner: postgres
 --
@@ -1549,7 +1821,7 @@ GRANT ALL ON SEQUENCE public.live_event_timeline_id_seq TO smart_city_user;
 
 
 --
--- TOC entry 5138 (class 0 OID 0)
+-- TOC entry 5173 (class 0 OID 0)
 -- Dependencies: 237
 -- Name: TABLE live_processing_logs; Type: ACL; Schema: public; Owner: postgres
 --
@@ -1558,7 +1830,7 @@ GRANT ALL ON TABLE public.live_processing_logs TO smart_city_user;
 
 
 --
--- TOC entry 5140 (class 0 OID 0)
+-- TOC entry 5175 (class 0 OID 0)
 -- Dependencies: 236
 -- Name: SEQUENCE live_processing_logs_id_seq; Type: ACL; Schema: public; Owner: postgres
 --
@@ -1567,7 +1839,7 @@ GRANT ALL ON SEQUENCE public.live_processing_logs_id_seq TO smart_city_user;
 
 
 --
--- TOC entry 5141 (class 0 OID 0)
+-- TOC entry 5176 (class 0 OID 0)
 -- Dependencies: 235
 -- Name: TABLE live_tracking_results; Type: ACL; Schema: public; Owner: postgres
 --
@@ -1576,7 +1848,7 @@ GRANT ALL ON TABLE public.live_tracking_results TO smart_city_user;
 
 
 --
--- TOC entry 5143 (class 0 OID 0)
+-- TOC entry 5178 (class 0 OID 0)
 -- Dependencies: 234
 -- Name: SEQUENCE live_tracking_results_id_seq; Type: ACL; Schema: public; Owner: postgres
 --
@@ -1585,7 +1857,7 @@ GRANT ALL ON SEQUENCE public.live_tracking_results_id_seq TO smart_city_user;
 
 
 --
--- TOC entry 5144 (class 0 OID 0)
+-- TOC entry 5179 (class 0 OID 0)
 -- Dependencies: 229
 -- Name: TABLE live_video_uploads; Type: ACL; Schema: public; Owner: postgres
 --
@@ -1594,7 +1866,7 @@ GRANT ALL ON TABLE public.live_video_uploads TO smart_city_user;
 
 
 --
--- TOC entry 5146 (class 0 OID 0)
+-- TOC entry 5181 (class 0 OID 0)
 -- Dependencies: 228
 -- Name: SEQUENCE live_video_uploads_id_seq; Type: ACL; Schema: public; Owner: postgres
 --
@@ -1603,7 +1875,7 @@ GRANT ALL ON SEQUENCE public.live_video_uploads_id_seq TO smart_city_user;
 
 
 --
--- TOC entry 5147 (class 0 OID 0)
+-- TOC entry 5182 (class 0 OID 0)
 -- Dependencies: 225
 -- Name: TABLE map_entities; Type: ACL; Schema: public; Owner: postgres
 --
@@ -1612,7 +1884,7 @@ GRANT ALL ON TABLE public.map_entities TO smart_city_user;
 
 
 --
--- TOC entry 5148 (class 0 OID 0)
+-- TOC entry 5183 (class 0 OID 0)
 -- Dependencies: 222
 -- Name: TABLE scenarios; Type: ACL; Schema: public; Owner: postgres
 --
@@ -1621,7 +1893,7 @@ GRANT ALL ON TABLE public.scenarios TO smart_city_user;
 
 
 --
--- TOC entry 5150 (class 0 OID 0)
+-- TOC entry 5185 (class 0 OID 0)
 -- Dependencies: 221
 -- Name: SEQUENCE scenarios_id_seq; Type: ACL; Schema: public; Owner: postgres
 --
@@ -1630,7 +1902,7 @@ GRANT ALL ON SEQUENCE public.scenarios_id_seq TO smart_city_user;
 
 
 --
--- TOC entry 5151 (class 0 OID 0)
+-- TOC entry 5186 (class 0 OID 0)
 -- Dependencies: 224
 -- Name: TABLE timeline_events; Type: ACL; Schema: public; Owner: postgres
 --
@@ -1639,7 +1911,7 @@ GRANT ALL ON TABLE public.timeline_events TO smart_city_user;
 
 
 --
--- TOC entry 5153 (class 0 OID 0)
+-- TOC entry 5188 (class 0 OID 0)
 -- Dependencies: 223
 -- Name: SEQUENCE timeline_events_id_seq; Type: ACL; Schema: public; Owner: postgres
 --
@@ -1648,7 +1920,43 @@ GRANT ALL ON SEQUENCE public.timeline_events_id_seq TO smart_city_user;
 
 
 --
--- TOC entry 5154 (class 0 OID 0)
+-- TOC entry 5189 (class 0 OID 0)
+-- Dependencies: 239
+-- Name: TABLE traffic_decisions; Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON TABLE public.traffic_decisions TO smart_city_user;
+
+
+--
+-- TOC entry 5191 (class 0 OID 0)
+-- Dependencies: 238
+-- Name: SEQUENCE traffic_decisions_id_seq; Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON SEQUENCE public.traffic_decisions_id_seq TO smart_city_user;
+
+
+--
+-- TOC entry 5192 (class 0 OID 0)
+-- Dependencies: 241
+-- Name: TABLE traffic_demo_scenarios; Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON TABLE public.traffic_demo_scenarios TO smart_city_user;
+
+
+--
+-- TOC entry 5194 (class 0 OID 0)
+-- Dependencies: 240
+-- Name: SEQUENCE traffic_demo_scenarios_id_seq; Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON SEQUENCE public.traffic_demo_scenarios_id_seq TO smart_city_user;
+
+
+--
+-- TOC entry 5195 (class 0 OID 0)
 -- Dependencies: 220
 -- Name: TABLE users; Type: ACL; Schema: public; Owner: postgres
 --
@@ -1657,7 +1965,7 @@ GRANT ALL ON TABLE public.users TO smart_city_user;
 
 
 --
--- TOC entry 5156 (class 0 OID 0)
+-- TOC entry 5197 (class 0 OID 0)
 -- Dependencies: 219
 -- Name: SEQUENCE users_id_seq; Type: ACL; Schema: public; Owner: postgres
 --
@@ -1666,7 +1974,7 @@ GRANT ALL ON SEQUENCE public.users_id_seq TO smart_city_user;
 
 
 --
--- TOC entry 5157 (class 0 OID 0)
+-- TOC entry 5198 (class 0 OID 0)
 -- Dependencies: 226
 -- Name: TABLE vehicles; Type: ACL; Schema: public; Owner: postgres
 --
@@ -1675,7 +1983,7 @@ GRANT ALL ON TABLE public.vehicles TO smart_city_user;
 
 
 --
--- TOC entry 2100 (class 826 OID 25384)
+-- TOC entry 2110 (class 826 OID 25384)
 -- Name: DEFAULT PRIVILEGES FOR SEQUENCES; Type: DEFAULT ACL; Schema: public; Owner: postgres
 --
 
@@ -1683,18 +1991,18 @@ ALTER DEFAULT PRIVILEGES FOR ROLE postgres IN SCHEMA public GRANT ALL ON SEQUENC
 
 
 --
--- TOC entry 2099 (class 826 OID 25383)
+-- TOC entry 2109 (class 826 OID 25383)
 -- Name: DEFAULT PRIVILEGES FOR TABLES; Type: DEFAULT ACL; Schema: public; Owner: postgres
 --
 
 ALTER DEFAULT PRIVILEGES FOR ROLE postgres IN SCHEMA public GRANT ALL ON TABLES TO smart_city_user;
 
 
--- Completed on 2026-08-28 03:33:20
+-- Completed on 2026-09-08 13:53:52
 
 --
 -- PostgreSQL database dump complete
 --
 
-\unrestrict InYgC4B3Y4KIwY1KGVxkNQhyRxUVmbifwxyvGK5geFQgIM0BiAjS7KEzrIsXRKM
+\unrestrict 9nWPvITqFAfQfypZjf2FIPuRxiiJgS8DbdXdvQnhIeDjvhmJc9ZnufRPXnTseKq
 

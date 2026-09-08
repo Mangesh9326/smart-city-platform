@@ -34,6 +34,10 @@ class AgentCoordinator {
         });
     }
 
+    getAgent(name) {
+        return this.agents.find((agent) => agent.name === name) || null;
+    }
+
     async processCityEvent(eventPayload) {
         console.log(`[COORDINATOR] Ingesting Dynamic Event: ${eventPayload.type} at ${eventPayload.location} (Severity: ${eventPayload.severity})`);
         

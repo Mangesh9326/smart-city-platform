@@ -9,15 +9,25 @@ const pool = new Pool({
     port: process.env.DB_PORT,
 });
 
-pool.on('connect', () => {
-    console.log('[SYSTEM] Connected to PostgreSQL Database');
+pool.on('error', (err) => {
+    console.error('[DB ERROR] Unexpected PostgreSQL pool error:', err);
 });
 
-pool.on('error', (err) => {
-    console.error('[ERROR] Unexpected error on idle client', err);
-    process.exit(-1);
-});
+async function testDatabaseConnection() {
+    try {
+        const client = await pool.connect();
+
+        console.log('[SYSTEM] PostgreSQL Database Connected');
+
+        client.release();
+    } catch (error) {
+        console.error('[DB ERROR] PostgreSQL connection failed:', error.message);
+        throw error;
+    }
+}
 
 module.exports = {
     query: (text, params) => pool.query(text, params),
+    pool,
+    testDatabaseConnection,
 };

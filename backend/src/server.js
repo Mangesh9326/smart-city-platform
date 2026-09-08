@@ -5,7 +5,7 @@ const cors = require('cors');
 const path = require('path');
 const fs = require('fs');
 const { initializeSocket } = require('./engine/socketManager');
-
+const { testDatabaseConnection } = require('./config/db');
 // Route Imports
 const authRoutes = require('./api/routes/authRoutes');
 const simulationRoutes = require('./api/routes/simulationRoutes');
@@ -58,7 +58,13 @@ app.get('/api/videos/list', (req, res) => {
 
 const PORT = process.env.PORT || 5000;
 
-server.listen(PORT, () => {
+server.listen(PORT, async () => {
     console.log(`[SYSTEM] Server initialized on port ${PORT}`);
     console.log(`[SYSTEM] Environment: ${process.env.NODE_ENV}`);
+
+    try {
+        await testDatabaseConnection();
+    } catch (error) {
+        console.error('[SYSTEM] Database initialization failed');
+    }
 });
