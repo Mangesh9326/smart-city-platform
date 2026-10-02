@@ -10,7 +10,8 @@ const { testDatabaseConnection } = require('./config/db');
 const authRoutes = require('./api/routes/authRoutes');
 const simulationRoutes = require('./api/routes/simulationRoutes');
 const mapRoutes = require('./api/routes/map');
-const trafficRoutes = require('./api/routes/trafficRoutes'); // Imported traffic routes
+const trafficRoutes = require('./api/routes/trafficRoutes');
+const hospitalRoutes = require('./api/routes/hospitalRoutes');
 
 const app = express();
 const server = http.createServer(app);
@@ -30,7 +31,8 @@ app.use('/uploads', express.static(path.join(__dirname, 'api/public/uploads')));
 app.use('/api/auth', authRoutes);
 app.use('/api/simulation', simulationRoutes);
 app.use('/api/map', mapRoutes);
-app.use('/api/traffic', trafficRoutes); // Mounted the traffic routes
+app.use('/api/traffic', trafficRoutes);
+app.use('/api/hospitals', hospitalRoutes);
 
 // Health Check
 app.get('/api/health', (req, res) => {

@@ -61,13 +61,11 @@ export const mainSidebar = [
   },
 ];
 
-
 export const departmentSidebars = {
-
   //------------------------------------------------
   // TRAFFIC
   //------------------------------------------------
-traffic: [
+  traffic: [
     { title: "Overview", path: "/traffic" },
     { title: "Traffic Cameras", path: "/traffic/cameras" },
     { title: "Live Traffic", path: "/traffic/live" },
@@ -76,24 +74,21 @@ traffic: [
     { title: "Emergency Priority", path: "/traffic/emergency-priority" },
     { title: "AI Predictions", path: "/traffic/predictions" },
     { title: "Congestion & Density", path: "/traffic/congestion" },
-    { title: "Road Closures", path: "/traffic/road-closures" }
+    { title: "Road Closures", path: "/traffic/road-closures" },
   ],
   //------------------------------------------------
   // HOSPITAL
   //------------------------------------------------
   hospital: [
     { title: "Overview", path: "/hospital" },
-    { title: "Hospital Status", path: "/hospital/status" },
-    { title: "ICU Beds", path: "/hospital/icu" },
-    { title: "Available Beds", path: "/hospital/beds" },
-    { title: "Doctors", path: "/hospital/doctors" },
-    { title: "Ambulances", path: "/hospital/ambulances" },
-    { title: "Emergency Cases", path: "/hospital/emergency" },
-    { title: "Medicine Inventory", path: "/hospital/medicine" },
-    { title: "Medical Equipment", path: "/hospital/equipment" },
-    { title: "Patient Queue", path: "/hospital/queue" },
-    { title: "Disease Outbreak", path: "/hospital/outbreak" },
-    { title: "Hospital Analytics", path: "/hospital/analytics" }
+    { title: "Hospitals", path: "/hospital/hospitals" },
+    { title: "Emergency & Ambulance", path: "/hospital/emergency-ambulance" },
+    { title: "Bed Availability", path: "/hospital/bed-availability" },
+    { title: "Emergency Department", path: "/hospital/emergency-department" },
+    { title: "Patient Flow", path: "/hospital/patient-flow" },
+    { title: "Hospital Capacity", path: "/hospital/capacity" },
+    { title: "Resource Management", path: "/hospital/resource-management" },
+    { title: "Hospital Agent", path: "/hospital/agent" },
   ],
 
   //------------------------------------------------
@@ -111,7 +106,7 @@ traffic: [
     { title: "CCTV Monitoring", path: "/police/cctv" },
     { title: "Case Management", path: "/police/cases" },
     { title: "AI Threat Detection", path: "/police/threats" },
-    { title: "Police Analytics", path: "/police/analytics" }
+    { title: "Police Analytics", path: "/police/analytics" },
   ],
 
   //------------------------------------------------
@@ -129,7 +124,7 @@ traffic: [
     { title: "Emergency Requests", path: "/fire/emergency" },
     { title: "Response Time", path: "/fire/response" },
     { title: "Fire Analytics", path: "/fire/analytics" },
-    { title: "AI Fire Prediction", path: "/fire/predictions" }
+    { title: "AI Fire Prediction", path: "/fire/predictions" },
   ],
 
   //------------------------------------------------
@@ -147,7 +142,7 @@ traffic: [
     { title: "Water Quality", path: "/utility/quality" },
     { title: "Maintenance", path: "/utility/maintenance" },
     { title: "Utility Analytics", path: "/utility/analytics" },
-    { title: "AI Resource Optimization", path: "/utility/predictions" }
+    { title: "AI Resource Optimization", path: "/utility/predictions" },
   ],
 
   //------------------------------------------------
@@ -161,7 +156,7 @@ traffic: [
     { title: "Service Requests", path: "/citizen/services" },
     { title: "Permits", path: "/citizen/permits" },
     { title: "Public Notices", path: "/citizen/notices" },
-    { title: "Citizen Analytics", path: "/citizen/analytics" }
+    { title: "Citizen Analytics", path: "/citizen/analytics" },
   ],
 
   //------------------------------------------------
@@ -175,7 +170,7 @@ traffic: [
     { title: "Fire Reports", path: "/reports/fire" },
     { title: "Utility Reports", path: "/reports/utility" },
     { title: "Citizen Reports", path: "/reports/citizen" },
-    { title: "Download Reports", path: "/reports/download" }
+    { title: "Download Reports", path: "/reports/download" },
   ],
 
   //------------------------------------------------
@@ -189,7 +184,7 @@ traffic: [
     { title: "AI Agents", path: "/analytics/agents" },
     { title: "Decision Intelligence", path: "/analytics/decision" },
     { title: "Historical Trends", path: "/analytics/history" },
-    { title: "Forecasting", path: "/analytics/forecast" }
+    { title: "Forecasting", path: "/analytics/forecast" },
   ],
 
   //------------------------------------------------
@@ -203,7 +198,6 @@ traffic: [
     { title: "AI Models", path: "/settings/ai-models" },
     { title: "Notifications", path: "/settings/notifications" },
     { title: "Audit Logs", path: "/settings/logs" },
-    { title: "System Backup", path: "/settings/backup" }
-  ]
-
+    { title: "System Backup", path: "/settings/backup" },
+  ],
 };

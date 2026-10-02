@@ -24,6 +24,15 @@ import TrafficCameras from "./pages/Departments/Traffic/TrafficCameras";
 import EmergencyPriority from "./pages/Departments/Traffic/EmergencyPriority";
 import CongestionHeatmap from "./pages/Departments/Traffic/CongestionHeatmap";
 import AIPredictions from "./pages/Departments/Traffic/AIPredictions";
+//Hospital Pages
+import HospitalOverview from "./pages/Departments/Hospital/Overview";
+import Hospitals from "./pages/Departments/Hospital/Hospitals";
+import BedAvailability from "./pages/Departments/Hospital/BedAvailability";
+import HospitalCapacity from "./pages/Departments/Hospital/HospitalCapacity";
+import EmergencyDepartment from "./pages/Departments/Hospital/EmergencyDepartment";
+import PatientFlow from "./pages/Departments/Hospital/PatientFlow";
+import ResourceManagement from "./pages/Departments/Hospital/ResourceManagement";
+import EmergencyAmbulance from "./pages/Departments/Hospital/EmergencyAmbulance";
 
 // Placeholder Pages for scaffolding
 const PlaceholderPage = ({ title }) => (
@@ -76,19 +85,21 @@ export default function App() {
             path="hospital"
             element={
               <DepartmentLayout
-                title="Hospital"
+                title="Hospital Operations"
                 sidebarConfig={departmentSidebars.hospital}
               />
             }
           >
-            <Route
-              index
-              element={<PlaceholderPage title="Hospital Overview" />}
-            />
-            <Route
-              path="icu"
-              element={<PlaceholderPage title="ICU Bed Tracking" />}
-            />
+            <Route index element={<HospitalOverview />} />
+            <Route path="hospitals" element={<Hospitals />} />
+            <Route path="emergency-ambulance" element={<EmergencyAmbulance />} />
+            <Route path="bed-availability" element={<BedAvailability />} />
+            <Route path="emergency-department" element={<EmergencyDepartment />} />
+            <Route path="patient-flow" element={<PatientFlow/>} />
+            <Route path="capacity" element={<HospitalCapacity />} />
+            <Route path="resource-management" element={<ResourceManagement/>} />
+            <Route path="agent" element={<PlaceholderPage title="Hospital Agent" />} />
+
             <Route path="*" element={<Navigate to="/hospital" replace />} />
           </Route>
 
